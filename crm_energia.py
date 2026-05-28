@@ -177,4 +177,24 @@ for index, fase in enumerate(FASES):
                 lead['fase'] = nova_fase
                 st.rerun()
                 
+            st.write("") # Espaçamento entre os cartões# --- NOVA DINÂMICA DE MOVIMENTAÇÃO (SETAS) ---
+            fase_atual = lead.get('fase', fase)
+            indice_fase = FASES.index(fase_atual)
+            
+            col_esq, col_dir = st.columns(2)
+            
+            with col_esq:
+                # Só mostra a seta para a esquerda se não estiver na primeira coluna
+                if indice_fase > 0:
+                    if st.button("⬅️ Voltar", key=f"esq_{lead['id']}", use_container_width=True):
+                        lead['fase'] = FASES[indice_fase - 1]
+                        st.rerun()
+            
+            with col_dir:
+                # Só mostra a seta para a direita se não estiver na última coluna
+                if indice_fase < len(FASES) - 1:
+                    if st.button("Avançar ➡️", key=f"dir_{lead['id']}", use_container_width=True):
+                        lead['fase'] = FASES[indice_fase + 1]
+                        st.rerun()
+                
             st.write("") # Espaçamento entre os cartões
