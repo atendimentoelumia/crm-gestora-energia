@@ -4,7 +4,7 @@ import uuid
 # Configuração da página
 st.set_page_config(page_title="CRM E-lumia", layout="wide")
 
-# Estilo visual dos cards
+# Estilo visual dos cartões (cards)
 st.markdown("""
     <style>
     div[data-testid="stVerticalBlock"] > div {
@@ -59,7 +59,7 @@ with st.sidebar:
         btn_salvar = st.form_submit_button("Salvar Lead")
         
         if btn_salvar and empresa:
-            # A MÁGICA ACONTECE AQUI: Cálculos automáticos de Gestão Mensal e Receita!
+            # Cálculos automáticos de Gestão Mensal e Receita
             gestao_mensal = (consumo_kwh / 1000) * fee_gestao
             receita_gestao = gestao_mensal * tempo_contrato
             
@@ -90,33 +90,43 @@ for index, fase in enumerate(FASES):
     with colunas_kanban[index]:
         st.markdown(f"#### {fase}")
         
-        # Conta quantos cards e o valor total em negociação nesta fase
-        leads_nesta_fase = [lead for lead in st.session_state.leads if lead["fase"] == fase]
-        valor_fase = sum(lead['receita_gestao'] for lead in leads_nesta_fase)
+        # Filtra as leads e garante que não há erros caso a chave 'fase' não exista
+        leads_nesta_fase = [lead for lead in st.session_state.leads if lead.get("fase") == fase]
         
-        st.markdown(f"<span style='color:gray; font-size:12px;'>{len(leads_nesta_fase)} cards | R$ {valor_fase:,.2f}</span>", unsafe_allow_html=True)
+        # Utiliza o .get() para somar o valor da fase com segurança (0 se não houver)
+        valor_fase = sum(lead.get('receita_gestao', 0) for lead in leads_nesta_fase)
+        
+        st.markdown(f"<span style='color:gray; font-size:12px;'>{len(leads_nesta_fase)} cartões | R$ {valor_fase:,.2f}</span>", unsafe_allow_html=True)
         st.write("---")
         
         for lead in leads_nesta_fase:
-            # Desenhando o Card
-            st.markdown(f"<div class='card-title'>{lead['empresa']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='card-info'>👤 {lead['contato']} ({lead['executivo']})</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='card-info'>⚡ {lead['produto']} | {lead['consumo']:,.0f} kWh</div>", unsafe_allow_html=True)
+            # Captura os dados de forma segura
+            empresa_nome = lead.get('empresa', 'Empresa Indefinida')
+            contato_nome = lead.get('contato', '')
+            exec_nome = lead.get('executivo', '')
+            prod_nome = lead.get('produto', '')
+            cons = lead.get('consumo', 0)
+            receita = lead.get('receita_gestao', 0)
+
+            # Desenhando o Cartão (Card)
+            st.markdown(f"<div class='card-title'>{empresa_nome}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='card-info'>👤 {contato_nome} ({exec_nome})</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='card-info'>⚡ {prod_nome} | {cons:,.0f} kWh</div>", unsafe_allow_html=True)
             
-            # Mostra o dinheiro projetado no card (Receita de Gestão Total)
-            st.markdown(f"<div class='card-money'>💰 R$ {lead['receita_gestao']:,.2f}</div>", unsafe_allow_html=True)
+            # Mostra o valor projetado no cartão de forma segura
+            st.markdown(f"<div class='card-money'>💰 R$ {receita:,.2f}</div>", unsafe_allow_html=True)
             
-            # Selectbox para "Mover" o card de fase
+            # Caixa de seleção para "Mover" o cartão de fase
             nova_fase = st.selectbox(
                 "Mover para:", 
                 FASES, 
-                index=FASES.index(lead['fase']), 
+                index=FASES.index(lead.get('fase', fase)), 
                 key=f"move_{lead['id']}",
                 label_visibility="collapsed"
             )
             
-            if nova_fase != lead['fase']:
+            if nova_fase != lead.get('fase'):
                 lead['fase'] = nova_fase
                 st.rerun()
                 
-            st.write("") # Espaçamento entre os cards
+            st.write("") # Espaçamento entre os cartões
