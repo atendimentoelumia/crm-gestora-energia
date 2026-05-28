@@ -1,103 +1,110 @@
 import streamlit as st
 import uuid
 
-# Configuração da página para ocupar a tela toda (ideal para Kanban)
-st.set_page_config(page_title="CRM Gestora de Energia", layout="wide")
+# Configuração da página
+st.set_page_config(page_title="CRM E-lumia", layout="wide")
 
-# Forçando um estilo escuro (Dark Mode) nos cards via CSS
+# Estilo visual dos cards
 st.markdown("""
     <style>
     div[data-testid="stVerticalBlock"] > div {
         background-color: #1E1E1E;
-        padding: 10px;
+        padding: 12px;
         border-radius: 8px;
+        border-left: 4px solid #4CAF50;
     }
-    .card-title { color: #4CAF50; font-weight: bold; margin-bottom: 5px; }
-    .card-info { font-size: 14px; color: #E0E0E0; margin-bottom: 2px; }
+    .card-title { color: #4CAF50; font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+    .card-info { font-size: 13px; color: #E0E0E0; margin-bottom: 3px; }
+    .card-money { font-size: 14px; color: #FFD700; font-weight: bold; margin-top: 5px; margin-bottom: 5px;}
     </style>
 """, unsafe_allow_html=True)
 
-st.title("⚡ CRM - Gestora de Energia")
+st.title("⚡ CRM E-lumia")
 
-# Definindo as fases do Kanban
 FASES = [
     "Contato feito", "Fatura recebida", "Aguardando estudo", 
     "Aguardando reunião", "Proposta apresentada", 
     "Aguardando decisão", "Ganho", "Perdido"
 ]
 
-# Inicializando o "banco de dados" temporário na memória do Streamlit
 if 'leads' not in st.session_state:
     st.session_state.leads = []
 
 # ==========================================
-# BARRA LATERAL: FORMULÁRIO DE NOVO LEAD
+# BARRA LATERAL: FORMULÁRIO BASEADO NA SUA PLANILHA
 # ==========================================
 with st.sidebar:
-    st.header("➕ Novo Card (Lead)")
+    st.header("➕ Cadastrar Lead")
     
     with st.form("form_novo_lead", clear_on_submit=True):
-        contato = st.text_input("Contato (Nome da pessoa)")
-        empresa = st.text_input("Nome da empresa")
-        cnpj = st.text_input("CNPJ")
+        empresa = st.text_input("Nome da empresa *")
         executivo = st.selectbox("Executivo", ["Roberto", "Thaiz", "Peterson"])
+        contato = st.text_input("Contato na empresa")
         
-        canal = st.radio("Canal", ["Direto", "Parceiro"])
-        # Variável para o nome do parceiro (ficará vazia se for Direto)
-        nome_parceiro = ""
+        canal = st.selectbox("Canal", ["Direto", "Parceiro"])
+        produto = st.selectbox("Produto", ["Mercado Livre", "GD"])
         
-        # Nota: O Streamlit form não suporta lógica condicional dinâmica *dentro* do submit sem recarregar.
-        # Para simplificar no MVP, deixamos o campo de parceiro sempre visível, mas opcional.
-        st.caption("Se o canal for 'Parceiro', digite o nome abaixo:")
-        nome_parceiro = st.text_input("Nome do Parceiro (Opcional)")
+        st.markdown("---")
+        st.markdown("**Dados Técnicos e Financeiros**")
+        consumo_kwh = st.number_input("Consumo médio (kWh)", min_value=0.0, step=100.0)
+        fee_gestao = st.number_input("Fee Gestão (R$/MWh)", min_value=0.0, step=1.0)
+        tempo_contrato = st.number_input("Tempo de contrato (Meses)", min_value=0, step=12)
         
-        produto = st.selectbox("Produto", ["Mercado Livre (ML)", "Geração Distribuída (GD)"])
-        consumo_kwh = st.number_input("Consumo Mês (kWh)", min_value=0.0, step=100.0)
-        tempo_contrato = st.number_input("Tempo de Contrato (Meses)", min_value=0, step=12)
-        migrado = st.radio("Cliente Migrado?", ["Sim", "Não"])
-        observacoes = st.text_area("Observações Gerais")
+        st.markdown("---")
+        migrado = st.selectbox("Cliente Migrado?", ["Sim", "Não"])
+        proposta = st.selectbox("Proposta apresentada?", ["", "Sim", "Não"])
+        probabilidade = st.selectbox("Probabilidade de fechamento", ["10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%"])
+        status = st.text_area("Status / Observações")
         
         btn_salvar = st.form_submit_button("Salvar Lead")
         
         if btn_salvar and empresa:
+            # A MÁGICA ACONTECE AQUI: Cálculos automáticos de Gestão Mensal e Receita!
+            gestao_mensal = (consumo_kwh / 1000) * fee_gestao
+            receita_gestao = gestao_mensal * tempo_contrato
+            
             novo_lead = {
-                "id": str(uuid.uuid4()), # Gera um ID único para o card
-                "fase": "Contato feito", # Todo card nasce na primeira fase
-                "contato": contato,
+                "id": str(uuid.uuid4()),
+                "fase": "Contato feito",
                 "empresa": empresa,
-                "cnpj": cnpj,
                 "executivo": executivo,
-                "canal": "Direto" if canal == "Direto" else f"Parceiro ({nome_parceiro})",
+                "contato": contato,
                 "produto": produto,
                 "consumo": consumo_kwh,
-                "tempo": tempo_contrato,
-                "migrado": migrado,
-                "obs": observacoes
+                "probabilidade": probabilidade,
+                "status": status,
+                "gestao_mensal": gestao_mensal,
+                "receita_gestao": receita_gestao
             }
             st.session_state.leads.append(novo_lead)
             st.success("Lead salvo com sucesso!")
+            st.rerun()
 
 # ==========================================
 # PAINEL KANBAN (COLUNAS)
 # ==========================================
-st.write("---")
-
-# Cria 8 colunas na tela
+# Cria o layout de colunas para o Kanban
 colunas_kanban = st.columns(len(FASES))
 
 for index, fase in enumerate(FASES):
     with colunas_kanban[index]:
-        st.markdown(f"### {fase}")
-        st.write("---")
+        st.markdown(f"#### {fase}")
         
-        # Filtra os leads que pertencem a esta fase
+        # Conta quantos cards e o valor total em negociação nesta fase
         leads_nesta_fase = [lead for lead in st.session_state.leads if lead["fase"] == fase]
+        valor_fase = sum(lead['receita_gestao'] for lead in leads_nesta_fase)
+        
+        st.markdown(f"<span style='color:gray; font-size:12px;'>{len(leads_nesta_fase)} cards | R$ {valor_fase:,.2f}</span>", unsafe_allow_html=True)
+        st.write("---")
         
         for lead in leads_nesta_fase:
             # Desenhando o Card
             st.markdown(f"<div class='card-title'>{lead['empresa']}</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='card-info'>👤 {lead['contato']} ({lead['executivo']})</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='card-info'>⚡ {lead['produto']} | {lead['consumo']} kWh</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='card-info'>⚡ {lead['produto']} | {lead['consumo']:,.0f} kWh</div>", unsafe_allow_html=True)
+            
+            # Mostra o dinheiro projetado no card (Receita de Gestão Total)
+            st.markdown(f"<div class='card-money'>💰 R$ {lead['receita_gestao']:,.2f}</div>", unsafe_allow_html=True)
             
             # Selectbox para "Mover" o card de fase
             nova_fase = st.selectbox(
@@ -108,7 +115,6 @@ for index, fase in enumerate(FASES):
                 label_visibility="collapsed"
             )
             
-            # Se a fase foi alterada no selectbox, atualiza o dado e recarrega a tela
             if nova_fase != lead['fase']:
                 lead['fase'] = nova_fase
                 st.rerun()
