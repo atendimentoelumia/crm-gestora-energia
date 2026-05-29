@@ -18,7 +18,8 @@ st.title("⚡ CRM E-lumia")
 
 # As duas esteiras separadas
 FASES_LEADS = ["A Contatar", "Contatado", "Quente", "Stand by"]
-FASES_CRM = ["Contato feito", "Fatura recebida", "Aguardando estudo", "Aguardando reunião", "Proposta apresentada", "Aguardando decisão", "Ganho", "Perdido"]
+# REMOVIDO: "Contato feito"
+FASES_CRM = ["Fatura recebida", "Aguardando estudo", "Aguardando reunião", "Proposta apresentada", "Aguardando decisão", "Ganho", "Perdido"]
 
 if 'leads' not in st.session_state:
     st.session_state.leads = []
@@ -62,7 +63,7 @@ with st.sidebar:
             st.rerun()
 
     elif st.session_state.lead_em_edicao:
-        # --- FORMULÁRIO DE EDIÇÃO (Simplificado para o MVP) ---
+        # --- FORMULÁRIO DE EDIÇÃO ---
         st.header("✏️ Editar")
         lead_atual = st.session_state.lead_em_edicao
         with st.form("form_edit"):
