@@ -12,7 +12,6 @@ st.set_page_config(page_title="Simulador de Economia de Energia", layout="center
 # ==========================================
 # CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
 # ==========================================
-# SUBSTITUA OS LINKS ABAIXO PELOS LINKS REAIS DAS LOGOS (De preferência imagens com fundo transparente)
 LOGO_ELUMIA = "https://via.placeholder.com/150x50?text=E-lumia" 
 LOGO_PARCEIRO = "https://via.placeholder.com/150x50?text=Logo+Parceiro"
 
@@ -114,7 +113,7 @@ elif st.session_state.page == 2:
             st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
 
 # ==========================================
-# TELA 3: RESULTADOS E 3 BOTÕES DE WHATSAPP
+# TELA 3: RESULTADOS E WHATSAPP (CORRIGIDA)
 # ==========================================
 elif st.session_state.page == 3:
     st.title("💰 Sua Economia Estimada")
@@ -138,54 +137,37 @@ elif st.session_state.page == 3:
     
     st.markdown("---")
     
-    st.markdown("<h3 style='text-align: center; color: #2E86C1;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #2E86C1; margin-bottom: 30px;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
     
     # ==========================================
     # CONFIGURAÇÃO DOS 3 ESPECIALISTAS
     # ==========================================
-    # Troque os nomes e os números abaixo (Código do país 55 + DDD + Número)
+    nome_esp1 = "Thaiz"
+    num_esp1 = "5511999999991"
     
-    nome_esp1 = "Thaiz Magnino"
-    num_esp1 = "5511937567788"
+    nome_esp2 = "Peterson"
+    num_esp2 = "5511999999992"
     
-    nome_esp2 = "Peterson Rodrigues"
-    num_esp2 = "5511980781012"
+    nome_esp3 = "Roberto"
+    num_esp3 = "5511999999993"
     
-    nome_esp3 = "Roberto Moreira Filho"
-    num_esp3 = "5511957714063"
-    
-    # Mensagem padronizada
     mensagem_padrao = f"Olá! Meu nome é {st.session_state.nome}. Acabei de usar o simulador e vi que posso economizar até {formata_moeda(economia_mensal)} por mês. Gostaria de saber como conseguir essa economia!"
     mensagem_codificada = urllib.parse.quote(mensagem_padrao)
     
-    # Geração dos 3 links
     link_wpp1 = f"https://wa.me/{num_esp1}?text={mensagem_codificada}"
     link_wpp2 = f"https://wa.me/{num_esp2}?text={mensagem_codificada}"
     link_wpp3 = f"https://wa.me/{num_esp3}?text={mensagem_codificada}"
     
-    # Criação dos botões na tela
-    st.markdown(
-        f"""
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 25px;">
-            <p style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">Escolha com quem quer começar a economizar:</p>
-            
-            <a href="{link_wpp1}" target="_blank" style="background-color: #25D366; color: white; padding: 12px 20px; text-align: center; text-decoration: none; width: 100%; max-width: 320px; font-size: 16px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                📱 Falar com {nome_esp1}
-            </a>
-            
-            <a href="{link_wpp2}" target="_blank" style="background-color: #25D366; color: white; padding: 12px 20px; text-align: center; text-decoration: none; width: 100%; max-width: 320px; font-size: 16px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                📱 Falar com {nome_esp2}
-            </a>
-            
-            <a href="{link_wpp3}" target="_blank" style="background-color: #25D366; color: white; padding: 12px 20px; text-align: center; text-decoration: none; width: 100%; max-width: 320px; font-size: 16px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                📱 Falar com {nome_esp3}
-            </a>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+    # Botões criados de forma nativa e blindada pelo Streamlit
+    st.markdown("<p style='text-align: center; font-size: 18px; font-weight: bold;'>Escolha com quem quer começar a economizar:</p>", unsafe_allow_html=True)
+    
+    st.link_button(f"📱 Falar com {nome_esp1}", link_wpp1, use_container_width=True)
+    st.link_button(f"📱 Falar com {nome_esp2}", link_wpp2, use_container_width=True)
+    st.link_button(f"📱 Falar com {nome_esp3}", link_wpp3, use_container_width=True)
     
     st.markdown("---")
-    if st.button("Fazer nova simulação"):
+    
+    # Botão de reiniciar
+    if st.button("Fazer nova simulação", use_container_width=True):
         reset()
         st.rerun()
