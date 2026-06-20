@@ -162,7 +162,7 @@ elif st.session_state.page == 3:
     link_wpp2 = f"https://wa.me/{num_esp2}?text={mensagem_codificada}"
     link_wpp3 = f"https://wa.me/{num_esp3}?text={mensagem_codificada}"
     
-    st.markdown("<p style='text-align: center; font-size: 18px; font-weight: bold;'>Escolha com quem quer falar agora:</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 22px; font-weight: bold;'>Escolha quem vai ajudar você!:</p>", unsafe_allow_html=True)
     
     st.link_button(f"📱 {nome_esp1}", link_wpp1, use_container_width=True)
     st.link_button(f"📱 {nome_esp2}", link_wpp2, use_container_width=True)
