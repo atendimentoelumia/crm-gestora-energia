@@ -2,6 +2,9 @@ import streamlit as st
 import requests
 import urllib.parse
 import urllib3
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
 
 # Desativa o aviso de segurança no terminal devido ao verify=False nas APIs
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -10,20 +13,44 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 st.set_page_config(page_title="Simulador de Economia de Energia", layout="centered")
 
 # ==========================================
+# FUNÇÃO PARA SALVAR NA PLANILHA GOOGLE
+# ==========================================
+def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato):
+    try:
+        # Define o escopo de acesso
+        scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/drive']
+        
+        # Carrega as credenciais do arquivo JSON que deve estar na mesma pasta do app
+        creds = ServiceAccountCredentials.from_json_keyfile_name('credenciais.json', scope)
+        client = gspread.authorize(creds)
+        
+        # ABRA A PLANILHA PELO NOME EXATO DELA
+        # Certifique-se de compartilhar a planilha com o e-mail do "client_email" do JSON
+        sheet = client.open("Leads_Palestra_Elumia").sheet1
+        
+        # Pega a data e hora atual do preenchimento
+        data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        
+        # Prepara a linha com os dados formatados
+        nova_linha = [data_hora, nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato]
+        
+        # Adiciona a linha na planilha
+        sheet.append_row(nova_linha)
+        return True
+    except Exception as e:
+        # Se der erro (ex: arquivo json faltando ou falta de compartilhamento), avisa nos bastidores
+        st.write(f"Erro ao salvar na planilha: {e}")
+        return False
+
+# ==========================================
 # CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
 # ==========================================
-# Se as imagens estiverem na mesma pasta deste arquivo, coloque apenas o nome delas aqui.
-# Exemplo: LOGO_ELUMIA = "minha_logo_elumia.png"
-
 LOGO_ELUMIA = "LOGO_ELUMIA.png" 
 LOGO_PARCEIRO = "LOGO_PARCEIRO.png"
 
-# Cria colunas para colocar uma logo na esquerda e outra na direita
 col_logo1, espaco, col_logo2 = st.columns([1, 2, 1])
-
 with col_logo1:
     st.image(LOGO_ELUMIA, use_container_width=True)
-    
 with col_logo2:
     st.image(LOGO_PARCEIRO, use_container_width=True)
 
@@ -79,8 +106,6 @@ elif st.session_state.page == 2:
     if len(cep_limpo) == 8 and cep_limpo.isdigit():
         try:
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'}
-            
-            # Tentativa 1: BrasilAPI
             response = requests.get(f"https://brasilapi.com.br/api/cep/v1/{cep_limpo}", headers=headers, timeout=5, verify=False)
             
             if response.status_code == 200:
@@ -88,7 +113,6 @@ elif st.session_state.page == 2:
                 endereco_completo = f"{data.get('street', '')}, {data.get('neighborhood', '')} - {data.get('city', '')}/{data.get('state', '')}"
                 st.success(f"Endereço encontrado: **{endereco_completo}**")
             else:
-                # Tentativa 2: ViaCEP
                 response_via = requests.get(f"https://viacep.com.br/ws/{cep_limpo}/json/", headers=headers, timeout=5, verify=False)
                 if response_via.status_code == 200:
                     data = response_via.json()
@@ -99,9 +123,8 @@ elif st.session_state.page == 2:
                         st.error("CEP não encontrado na base dos Correios.")
                 else:
                     st.error("Serviços de CEP indisponíveis no momento.")
-                    
         except requests.exceptions.RequestException:
-            st.error("Bloqueio de rede detectado. O firewall ou antivírus está impedindo o app de buscar o CEP.")
+            st.error("Erro de conexão ao buscar o CEP.")
             
     elif len(cep_input) > 0 and len(cep_limpo) != 8:
         st.warning("Continue digitando... O CEP precisa ter 8 números.")
@@ -111,13 +134,35 @@ elif st.session_state.page == 2:
     if st.button("Calcular Minha Economia"):
         if endereco_completo and valor_fatura > 0:
             st.session_state.valor_fatura = valor_fatura
+            st.session_state.endereco_completo = endereco_completo
+            st.session_state.cep_limpo = cep_limpo
+            
+            # Realiza os cálculos para salvar na planilha antes de mudar de tela
+            desconto = 0.12
+            economia_mensal = valor_fatura * desconto
+            economia_anual = economia_mensal * 12
+            economia_contrato = economia_anual * 5
+            
+            # DISPARA O SALVAMENTO AUTOMÁTICO
+            salvar_na_planilha(
+                st.session_state.nome,
+                st.session_state.email,
+                st.session_state.telefone,
+                st.session_state.cep_limpo,
+                st.session_state.endereco_completo,
+                valor_fatura,
+                economia_mensal,
+                economia_anual,
+                economia_contrato
+            )
+            
             next_page()
             st.rerun()
         else:
             st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
 
 # ==========================================
-# TELA 3: RESULTADOS E WHATSAPP 
+# TELA 3: RESULTADOS E WHATSAPP
 # ==========================================
 elif st.session_state.page == 3:
     st.title("💰 Sua Economia Estimada")
@@ -127,7 +172,7 @@ elif st.session_state.page == 3:
     
     economia_mensal = valor_fatura * desconto
     economia_anual = economia_mensal * 12
-    economia_contrato = economia_anual * 5
+    economia_contrato = economy_anual = economia_mensal * 12 * 5 # (Mensal * 12 * 5)
     
     def formata_moeda(valor):
         return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -137,22 +182,20 @@ elif st.session_state.page == 3:
     col1, col2, col3 = st.columns(3)
     col1.metric("Economia Mensal", formata_moeda(economia_mensal))
     col2.metric("Economia Anual", formata_moeda(economia_anual))
-    col3.metric("Contrato (5 Anos)", formata_moeda(economia_contrato))
+    col3.metric("Contrato (5 Anos)", formata_moeda(economia_anual * 5))
     
     st.markdown("---")
     
-    st.markdown("<h3 style='text-align: center; color: #dceb15; margin-bottom: 30px;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #2E86C1; margin-bottom: 30px;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
     
-    # ==========================================
     # CONFIGURAÇÃO DOS 3 ESPECIALISTAS
-    # ==========================================
-    nome_esp1 = "THAIZ"
+    nome_esp1 = "João Paulo"
     num_esp1 = "5511999999991"
     
-    nome_esp2 = "PETERSON"
+    nome_esp2 = "Maria Silva"
     num_esp2 = "5511999999992"
     
-    nome_esp3 = "ROBERTO"
+    nome_esp3 = "Carlos Eduardo"
     num_esp3 = "5511999999993"
     
     mensagem_padrao = f"Olá! Meu nome é {st.session_state.nome}. Acabei de usar o simulador e vi que posso economizar até {formata_moeda(economia_mensal)} por mês. Gostaria de saber como conseguir essa economia!"
@@ -162,14 +205,13 @@ elif st.session_state.page == 3:
     link_wpp2 = f"https://wa.me/{num_esp2}?text={mensagem_codificada}"
     link_wpp3 = f"https://wa.me/{num_esp3}?text={mensagem_codificada}"
     
-    st.markdown("<p style='text-align: center; font-size: 22px; font-weight: bold;'>Escolha quem vai ajudar você!:</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 18px; font-weight: bold;'>Escolha com quem quer falar agora:</p>", unsafe_allow_html=True)
     
-    st.link_button(f"📱 {nome_esp1}", link_wpp1, use_container_width=True)
-    st.link_button(f"📱 {nome_esp2}", link_wpp2, use_container_width=True)
-    st.link_button(f"📱 {nome_esp3}", link_wpp3, use_container_width=True)
+    st.link_button(f"📱 Falar com {nome_esp1}", link_wpp1, use_container_width=True)
+    st.link_button(f"📱 Falar com {nome_esp2}", link_wpp2, use_container_width=True)
+    st.link_button(f"📱 Falar com {nome_esp3}", link_wpp3, use_container_width=True)
     
     st.markdown("---")
-    
     if st.button("Fazer nova simulação", use_container_width=True):
         reset()
         st.rerun()
