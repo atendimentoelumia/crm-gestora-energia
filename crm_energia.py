@@ -12,18 +12,22 @@ st.set_page_config(page_title="Simulador de Economia de Energia", layout="center
 # ==========================================
 # CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
 # ==========================================
-LOGO_ELUMIA.png = "https://via.placeholder.com/150x50?text=E-lumia" 
-LOGO_PARCEIRO.png = "https://via.placeholder.com/150x50?text=Logo+Parceiro"
+# Se as imagens estiverem na mesma pasta deste arquivo, coloque apenas o nome delas aqui.
+# Exemplo: LOGO_ELUMIA = "minha_logo_elumia.png"
 
-st.markdown(
-    f"""
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; padding-bottom: 15px;">
-        <img src="{LOGO_ELUMIA.png}" style="max-height: 55px; width: auto;">
-        <img src="{LOGO_PARCEIRO.png}" style="max-height: 55px; width: auto;">
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+LOGO_ELUMIA = "https://via.placeholder.com/150x50.png?text=E-lumia" 
+LOGO_PARCEIRO = "https://via.placeholder.com/150x50.png?text=Logo+Parceiro"
+
+# Cria colunas para colocar uma logo na esquerda e outra na direita
+col_logo1, espaco, col_logo2 = st.columns([1, 2, 1])
+
+with col_logo1:
+    st.image(LOGO_ELUMIA, use_container_width=True)
+    
+with col_logo2:
+    st.image(LOGO_PARCEIRO, use_container_width=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
 
 # Controle das telas (páginas) do app
 if 'page' not in st.session_state:
@@ -113,7 +117,7 @@ elif st.session_state.page == 2:
             st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
 
 # ==========================================
-# TELA 3: RESULTADOS E WHATSAPP (CORRIGIDA)
+# TELA 3: RESULTADOS E WHATSAPP 
 # ==========================================
 elif st.session_state.page == 3:
     st.title("💰 Sua Economia Estimada")
@@ -142,13 +146,13 @@ elif st.session_state.page == 3:
     # ==========================================
     # CONFIGURAÇÃO DOS 3 ESPECIALISTAS
     # ==========================================
-    nome_esp1 = "Thaiz"
+    nome_esp1 = "João Paulo"
     num_esp1 = "5511999999991"
     
-    nome_esp2 = "Peterson"
+    nome_esp2 = "Maria Silva"
     num_esp2 = "5511999999992"
     
-    nome_esp3 = "Roberto"
+    nome_esp3 = "Carlos Eduardo"
     num_esp3 = "5511999999993"
     
     mensagem_padrao = f"Olá! Meu nome é {st.session_state.nome}. Acabei de usar o simulador e vi que posso economizar até {formata_moeda(economia_mensal)} por mês. Gostaria de saber como conseguir essa economia!"
@@ -158,8 +162,7 @@ elif st.session_state.page == 3:
     link_wpp2 = f"https://wa.me/{num_esp2}?text={mensagem_codificada}"
     link_wpp3 = f"https://wa.me/{num_esp3}?text={mensagem_codificada}"
     
-    # Botões criados de forma nativa e blindada pelo Streamlit
-    st.markdown("<p style='text-align: center; font-size: 18px; font-weight: bold;'>Escolha com quem quer começar a economizar:</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 18px; font-weight: bold;'>Escolha com quem quer falar agora:</p>", unsafe_allow_html=True)
     
     st.link_button(f"📱 Falar com {nome_esp1}", link_wpp1, use_container_width=True)
     st.link_button(f"📱 Falar com {nome_esp2}", link_wpp2, use_container_width=True)
@@ -167,7 +170,6 @@ elif st.session_state.page == 3:
     
     st.markdown("---")
     
-    # Botão de reiniciar
     if st.button("Fazer nova simulação", use_container_width=True):
         reset()
         st.rerun()
