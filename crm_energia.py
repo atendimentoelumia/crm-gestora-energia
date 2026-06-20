@@ -1,8 +1,12 @@
 import streamlit as st
 import requests
 import urllib.parse
+import urllib3
 
-# Configuração da página para ficar amigável em celulares
+# Desativa o aviso de segurança no terminal (já que estamos usando verify=False na API)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Configuração da página
 st.set_page_config(page_title="Simulador de Economia de Energia", layout="centered")
 
 # Controle das telas (páginas) do app
@@ -33,7 +37,6 @@ if st.session_state.page == 1:
         
         if submit:
             if nome and email and telefone:
-                # Salva os dados na sessão
                 st.session_state.nome = nome
                 st.session_state.email = email
                 st.session_state.telefone = telefone
@@ -42,7 +45,58 @@ if st.session_state.page == 1:
             else:
                 st.error("Por favor, preencha todos os campos para continuar.")
 
-Erro de conexão ao buscar o CEP. Verifique sua internet.
+# ==========================================
+# TELA 2: DADOS DA FATURA E CEP (BLINDADA)
+# ==========================================
+elif st.session_state.page == 2:
+    st.title("📍 Dados da Instalação")
+    st.write("Agora, informe o local e o valor médio da sua conta de luz.")
+    
+    cep_input = st.text_input("CEP", max_chars=9)
+    cep_limpo = cep_input.replace("-", "").replace(".", "").strip()
+    endereco_completo = ""
+    
+    if len(cep_limpo) == 8 and cep_limpo.isdigit():
+        try:
+            # Disfarça o Python como se fosse o navegador Google Chrome
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'}
+            
+            # Tentativa 1: BrasilAPI
+            response = requests.get(f"https://brasilapi.com.br/api/cep/v1/{cep_limpo}", headers=headers, timeout=5, verify=False)
+            
+            if response.status_code == 200:
+                data = response.json()
+                endereco_completo = f"{data.get('street', '')}, {data.get('neighborhood', '')} - {data.get('city', '')}/{data.get('state', '')}"
+                st.success(f"Endereço encontrado: **{endereco_completo}**")
+            else:
+                # Tentativa 2: ViaCEP
+                response_via = requests.get(f"https://viacep.com.br/ws/{cep_limpo}/json/", headers=headers, timeout=5, verify=False)
+                if response_via.status_code == 200:
+                    data = response_via.json()
+                    if "erro" not in data:
+                        endereco_completo = f"{data.get('logradouro', '')}, {data.get('bairro', '')} - {data.get('localidade', '')}/{data.get('uf', '')}"
+                        st.success(f"Endereço encontrado: **{endereco_completo}**")
+                    else:
+                        st.error("CEP não encontrado na base dos Correios.")
+                else:
+                    st.error("Serviços de CEP indisponíveis no momento.")
+                    
+        except requests.exceptions.RequestException:
+            # AQUI ESTÁ A CORREÇÃO DO SEU ERRO ANTERIOR:
+            st.error("Bloqueio de rede detectado. O firewall ou antivírus está impedindo o app de buscar o CEP.")
+            
+    elif len(cep_input) > 0 and len(cep_limpo) != 8:
+        st.warning("Continue digitando... O CEP precisa ter 8 números.")
+            
+    valor_fatura = st.number_input("Valor médio da sua fatura de energia (R$)", min_value=0.0, format="%.2f")
+    
+    if st.button("Calcular Minha Economia"):
+        if endereco_completo and valor_fatura > 0:
+            st.session_state.valor_fatura = valor_fatura
+            next_page()
+            st.rerun()
+        else:
+            st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
 
 # ==========================================
 # TELA 3: RESULTADOS E WHATSAPP
@@ -58,11 +112,10 @@ elif st.session_state.page == 3:
     economia_anual = economia_mensal * 12
     economia_contrato = economia_anual * 5
     
-    # Função auxiliar para formatar moeda no padrão brasileiro
+    # Formata a moeda para o padrão brasileiro
     def formata_moeda(valor):
         return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     
-    # Exibição dos dados
     st.info(f"Analisamos sua fatura média de {formata_moeda(valor_fatura)} e aplicamos 12% de desconto.")
     
     col1, col2, col3 = st.columns(3)
@@ -72,18 +125,17 @@ elif st.session_state.page == 3:
     
     st.markdown("---")
     
-    # Frase de impacto
     st.markdown("<h3 style='text-align: center; color: #2E86C1;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
     
-    # Geração do link do WhatsApp
-    # COLOQUE O NÚMERO DA SUA EMPRESA AQUI (com código do país 55 e DDD)
+    # ==========================================
+    # COLOQUE O SEU NÚMERO AQUI (DDD + NÚMERO)
+    # ==========================================
     numero_empresa = "5511999999999" 
     
     mensagem_padrao = f"Olá! Meu nome é {st.session_state.nome}. Acabei de usar o simulador e vi que posso economizar até {formata_moeda(economia_mensal)} por mês. Gostaria de saber mais!"
     mensagem_codificada = urllib.parse.quote(mensagem_padrao)
     link_whatsapp = f"https://wa.me/{numero_empresa}?text={mensagem_codificada}"
     
-    # Botão visual para o WhatsApp
     st.markdown(
         f"""
         <div style="text-align: center; margin-top: 20px;">
