@@ -146,13 +146,13 @@ elif st.session_state.page == 3:
     # ==========================================
     # CONFIGURAÇÃO DOS 3 ESPECIALISTAS
     # ==========================================
-    nome_esp1 = "João Paulo"
+    nome_esp1 = "THAIZ"
     num_esp1 = "5511999999991"
     
-    nome_esp2 = "Maria Silva"
+    nome_esp2 = "PETERSON"
     num_esp2 = "5511999999992"
     
-    nome_esp3 = "Carlos Eduardo"
+    nome_esp3 = "ROBERTO"
     num_esp3 = "5511999999993"
     
     mensagem_padrao = f"Olá! Meu nome é {st.session_state.nome}. Acabei de usar o simulador e vi que posso economizar até {formata_moeda(economia_mensal)} por mês. Gostaria de saber como conseguir essa economia!"
@@ -164,9 +164,9 @@ elif st.session_state.page == 3:
     
     st.markdown("<p style='text-align: center; font-size: 18px; font-weight: bold;'>Escolha com quem quer falar agora:</p>", unsafe_allow_html=True)
     
-    st.link_button(f"📱 Falar com {nome_esp1}", link_wpp1, use_container_width=True)
-    st.link_button(f"📱 Falar com {nome_esp2}", link_wpp2, use_container_width=True)
-    st.link_button(f"📱 Falar com {nome_esp3}", link_wpp3, use_container_width=True)
+    st.link_button(f"📱 {nome_esp1}", link_wpp1, use_container_width=True)
+    st.link_button(f"📱 {nome_esp2}", link_wpp2, use_container_width=True)
+    st.link_button(f"📱 {nome_esp3}", link_wpp3, use_container_width=True)
     
     st.markdown("---")
     
