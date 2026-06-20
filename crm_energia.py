@@ -18,8 +18,8 @@ LOGO_PARCEIRO.png = "https://via.placeholder.com/150x50?text=Logo+Parceiro"
 st.markdown(
     f"""
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; padding-bottom: 15px;">
-        <img src="{LOGO_ELUMIA}" style="max-height: 55px; width: auto;">
-        <img src="{LOGO_PARCEIRO}" style="max-height: 55px; width: auto;">
+        <img src="{LOGO_ELUMIA.png}" style="max-height: 55px; width: auto;">
+        <img src="{LOGO_PARCEIRO.png}" style="max-height: 55px; width: auto;">
     </div>
     """,
     unsafe_allow_html=True
