@@ -43,28 +43,40 @@ if st.session_state.page == 1:
                 st.error("Por favor, preencha todos os campos para continuar.")
 
 # ==========================================
-# TELA 2: DADOS DA FATURA E CEP
+# TELA 2: DADOS DA FATURA E CEP (CORRIGIDA)
 # ==========================================
 elif st.session_state.page == 2:
     st.title("📍 Dados da Instalação")
     st.write("Agora, informe o local e o valor médio da sua conta de luz.")
     
-    # Campo de CEP
-    cep = st.text_input("CEP (Apenas números)", max_chars=8)
+    # Campo de CEP (permitindo até 9 caracteres caso o usuário cole com o traço)
+    cep_input = st.text_input("CEP", max_chars=9)
+    
+    # Limpeza automática do CEP (tira traços, pontos e espaços vazios)
+    cep_limpo = cep_input.replace("-", "").replace(".", "").strip()
     endereco_completo = ""
     
-    # API do ViaCEP para busca automática
-    if len(cep) == 8:
+    # API do ViaCEP com tratamento de erros robusto
+    if len(cep_limpo) == 8 and cep_limpo.isdigit():
         try:
-            response = requests.get(f"https://viacep.com.br/ws/{cep}/json/")
-            data = response.json()
-            if "erro" not in data:
-                endereco_completo = f"{data['logradouro']}, {data['bairro']} - {data['localidade']}/{data['uf']}"
-                st.success(f"Endereço encontrado: **{endereco_completo}**")
+            # Adicionado timeout de 5 segundos para não travar o app se a internet falhar
+            response = requests.get(f"https://viacep.com.br/ws/{cep_limpo}/json/", timeout=5)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "erro" not in data:
+                    endereco_completo = f"{data.get('logradouro', '')}, {data.get('bairro', '')} - {data.get('localidade', '')}/{data.get('uf', '')}"
+                    st.success(f"Endereço encontrado: **{endereco_completo}**")
+                else:
+                    st.error("CEP não encontrado na base dos Correios. Verifique os números.")
             else:
-                st.error("CEP não encontrado. Verifique os números.")
-        except:
-            st.error("Erro ao buscar o CEP na base de dados.")
+                st.error("O serviço de busca de CEP está indisponível no momento.")
+                
+        except requests.exceptions.RequestException:
+            st.error("Erro de conexão ao buscar o CEP. Verifique sua internet.")
+            
+    elif len(cep_input) > 0 and len(cep_limpo) != 8:
+        st.warning("Continue digitando... O CEP precisa ter 8 números.")
             
     # Campo de Valor da Fatura
     valor_fatura = st.number_input("Valor médio da sua fatura de energia (R$)", min_value=0.0, format="%.2f")
