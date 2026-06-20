@@ -12,8 +12,8 @@ st.set_page_config(page_title="Simulador de Economia de Energia", layout="center
 # ==========================================
 # CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
 # ==========================================
-LOGO_ELUMIA = "https://via.placeholder.com/150x50?text=E-lumia" 
-LOGO_PARCEIRO = "https://via.placeholder.com/150x50?text=Logo+Parceiro"
+LOGO_ELUMIA.png = "https://via.placeholder.com/150x50?text=E-lumia" 
+LOGO_PARCEIRO.png = "https://via.placeholder.com/150x50?text=Logo+Parceiro"
 
 st.markdown(
     f"""
