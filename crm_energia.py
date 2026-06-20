@@ -15,8 +15,8 @@ st.set_page_config(page_title="Simulador de Economia de Energia", layout="center
 # Se as imagens estiverem na mesma pasta deste arquivo, coloque apenas o nome delas aqui.
 # Exemplo: LOGO_ELUMIA = "minha_logo_elumia.png"
 
-LOGO_ELUMIA = "https://via.placeholder.com/150x50.png?text=E-lumia" 
-LOGO_PARCEIRO = "https://via.placeholder.com/150x50.png?text=Logo+Parceiro"
+LOGO_ELUMIA = "LOGO_ELUMIA.png" 
+LOGO_PARCEIRO = "LOGO_PARCEIRO.png"
 
 # Cria colunas para colocar uma logo na esquerda e outra na direita
 col_logo1, espaco, col_logo2 = st.columns([1, 2, 1])
