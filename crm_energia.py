@@ -3,11 +3,29 @@ import requests
 import urllib.parse
 import urllib3
 
-# Desativa o aviso de segurança no terminal
+# Desativa o aviso de segurança no terminal devido ao verify=False nas APIs
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Configuração da página
 st.set_page_config(page_title="Simulador de Economia de Energia", layout="centered")
+
+# ==========================================
+# CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
+# ==========================================
+# SUBSTITUA OS LINKS ABAIXO PELOS LINKS REAIS DAS LOGOS (De preferência imagens com fundo transparente)
+LOGO_ELUMIA = "https://via.placeholder.com/150x50?text=E-lumia" 
+LOGO_PARCEIRO = "https://via.placeholder.com/150x50?text=Logo+Parceiro"
+
+st.markdown(
+    f"""
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; padding-bottom: 15px;">
+        <img src="{LOGO_ELUMIA}" style="max-height: 55px; width: auto;">
+        <img src="{LOGO_PARCEIRO}" style="max-height: 55px; width: auto;">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 
 # Controle das telas (páginas) do app
 if 'page' not in st.session_state:
@@ -26,7 +44,7 @@ def reset():
 # ==========================================
 if st.session_state.page == 1:
     st.title("⚡ Simulador de Economia de Energia")
-    st.write("Preencha seus dados abaixo para descobrirmos o quanto você pode economizar.")
+    st.write("Preencha os seus dados abaixo para descobrirmos o quanto pode economizar.")
     
     with st.form("form_contato"):
         nome = st.text_input("Nome Completo")
@@ -58,7 +76,7 @@ elif st.session_state.page == 2:
     
     if len(cep_limpo) == 8 and cep_limpo.isdigit():
         try:
-            # Disfarça o Python como se fosse o navegador Google Chrome
+            # Disfarça o Python como se fosse um navegador real para evitar bloqueios
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'}
             
             # Tentativa 1: BrasilAPI
@@ -69,7 +87,7 @@ elif st.session_state.page == 2:
                 endereco_completo = f"{data.get('street', '')}, {data.get('neighborhood', '')} - {data.get('city', '')}/{data.get('state', '')}"
                 st.success(f"Endereço encontrado: **{endereco_completo}**")
             else:
-                # Tentativa 2: ViaCEP
+                # Tentativa 2: ViaCEP (Plano B)
                 response_via = requests.get(f"https://viacep.com.br/ws/{cep_limpo}/json/", headers=headers, timeout=5, verify=False)
                 if response_via.status_code == 200:
                     data = response_via.json()
@@ -98,25 +116,24 @@ elif st.session_state.page == 2:
             st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
 
 # ==========================================
-# TELA 3: RESULTADOS E WHATSAPP (SEM EXIBIR A %)
+# TELA 3: RESULTADOS E WHATSAPP (SEM % EXIBIDA)
 # ==========================================
 elif st.session_state.page == 3:
     st.title("💰 Sua Economia Estimada")
     
-    # Cálculos (O cálculo de 12% continua aqui no código, mas invisível para o cliente)
+    # Cálculos internos (12% oculto do texto)
     valor_fatura = st.session_state.valor_fatura
-    desconto = 0.12 # 12%
+    desconto = 0.12 
     
     economia_mensal = valor_fatura * desconto
     economia_anual = economia_mensal * 12
     economia_contrato = economia_anual * 5
     
-    # Formata a moeda para o padrão brasileiro
+    # Formata o valor numérico para a moeda no padrão brasileiro
     def formata_moeda(valor):
         return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     
-    # Texto alterado para não citar os 12%
-    st.info(f"Com base na sua fatura média de {formata_moeda(valor_fatura)}, projetamos a seguinte economia para sua empresa:")
+    st.info(f"Com base na sua fatura média de {formata_moeda(valor_fatura)}, projetamos a seguinte economia para a sua empresa:")
     
     col1, col2, col3 = st.columns(3)
     col1.metric("Economia Mensal", formata_moeda(economia_mensal))
@@ -128,27 +145,11 @@ elif st.session_state.page == 3:
     st.markdown("<h3 style='text-align: center; color: #2E86C1;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
     
     # ==========================================
-    # COLOQUE O SEU NÚMERO AQUI (DDD + NÚMERO)
+    # CONFIGURAÇÃO DO WHATSAPP DA EMPRESA
     # ==========================================
-    numero_empresa = "5511999999999" 
+    # COLOQUE O SEU NÚMERO COMERCIAL AQUI (Código do país 55 + DDD + Número)
+    numero_empresa = "5511957714063" 
     
-    # Mensagem do WhatsApp levemente ajustada também
     mensagem_padrao = f"Olá! Meu nome é {st.session_state.nome}. Acabei de usar o simulador e vi que posso economizar até {formata_moeda(economia_mensal)} por mês. Gostaria de saber como conseguir essa economia!"
     mensagem_codificada = urllib.parse.quote(mensagem_padrao)
-    link_whatsapp = f"https://wa.me/{numero_empresa}?text={mensagem_codificada}"
-    
-    st.markdown(
-        f"""
-        <div style="text-align: center; margin-top: 20px;">
-            <a href="{link_whatsapp}" target="_blank" style="background-color: #25D366; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 18px; border-radius: 8px; font-weight: bold;">
-                Falar com um Especialista no WhatsApp
-            </a>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
-    
-    st.markdown("---")
-    if st.button("Fazer nova simulação"):
-        reset()
-        st.rerun()
+    link_whatsapp = f"https://wa.me/{numero
