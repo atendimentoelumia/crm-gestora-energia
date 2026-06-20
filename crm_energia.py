@@ -3,7 +3,7 @@ import requests
 import urllib.parse
 import urllib3
 
-# Desativa o aviso de segurança no terminal (já que estamos usando verify=False na API)
+# Desativa o aviso de segurança no terminal
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Configuração da página
@@ -82,7 +82,6 @@ elif st.session_state.page == 2:
                     st.error("Serviços de CEP indisponíveis no momento.")
                     
         except requests.exceptions.RequestException:
-            # AQUI ESTÁ A CORREÇÃO DO SEU ERRO ANTERIOR:
             st.error("Bloqueio de rede detectado. O firewall ou antivírus está impedindo o app de buscar o CEP.")
             
     elif len(cep_input) > 0 and len(cep_limpo) != 8:
@@ -99,12 +98,12 @@ elif st.session_state.page == 2:
             st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
 
 # ==========================================
-# TELA 3: RESULTADOS E WHATSAPP
+# TELA 3: RESULTADOS E WHATSAPP (SEM EXIBIR A %)
 # ==========================================
 elif st.session_state.page == 3:
     st.title("💰 Sua Economia Estimada")
     
-    # Cálculos
+    # Cálculos (O cálculo de 12% continua aqui no código, mas invisível para o cliente)
     valor_fatura = st.session_state.valor_fatura
     desconto = 0.12 # 12%
     
@@ -116,7 +115,8 @@ elif st.session_state.page == 3:
     def formata_moeda(valor):
         return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     
-    st.info(f"Analisamos sua fatura média de {formata_moeda(valor_fatura)} e aplicamos 12% de desconto.")
+    # Texto alterado para não citar os 12%
+    st.info(f"Com base na sua fatura média de {formata_moeda(valor_fatura)}, projetamos a seguinte economia para sua empresa:")
     
     col1, col2, col3 = st.columns(3)
     col1.metric("Economia Mensal", formata_moeda(economia_mensal))
@@ -130,9 +130,10 @@ elif st.session_state.page == 3:
     # ==========================================
     # COLOQUE O SEU NÚMERO AQUI (DDD + NÚMERO)
     # ==========================================
-    numero_empresa = "5511957714063" 
+    numero_empresa = "5511999999999" 
     
-    mensagem_padrao = f"Olá! Meu nome é {st.session_state.nome}. Acabei de usar o simulador e vi que posso economizar até {formata_moeda(economia_mensal)} por mês. Gostaria de saber mais!"
+    # Mensagem do WhatsApp levemente ajustada também
+    mensagem_padrao = f"Olá! Meu nome é {st.session_state.nome}. Acabei de usar o simulador e vi que posso economizar até {formata_moeda(economia_mensal)} por mês. Gostaria de saber como conseguir essa economia!"
     mensagem_codificada = urllib.parse.quote(mensagem_padrao)
     link_whatsapp = f"https://wa.me/{numero_empresa}?text={mensagem_codificada}"
     
