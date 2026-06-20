@@ -130,7 +130,7 @@ elif st.session_state.page == 3:
     # ==========================================
     # COLOQUE O SEU NÚMERO AQUI (DDD + NÚMERO)
     # ==========================================
-    numero_empresa = "5511999999999" 
+    numero_empresa = "5511957714063" 
     
     mensagem_padrao = f"Olá! Meu nome é {st.session_state.nome}. Acabei de usar o simulador e vi que posso economizar até {formata_moeda(economia_mensal)} por mês. Gostaria de saber mais!"
     mensagem_codificada = urllib.parse.quote(mensagem_padrao)
