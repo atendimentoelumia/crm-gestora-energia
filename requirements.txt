@@ -1,2 +1,5 @@
 streamlit
-pip install gspread oauth2client
+requests
+gspread
+oauth2client
+urllib3
