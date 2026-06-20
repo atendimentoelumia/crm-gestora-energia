@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "crm-elumia-500021",
+  "private_key_id": "1fb028cafca15eb1dd81f62116eee573759251ee",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDEXVZEK/zcRUTI\nbYhVHDfzPw8FBbOPBs6jj5Ju9Nx3jbBWeiUwzzJOO3a+3imBdHBzXU0exiOtcI7c\nSDbx8zr3etYbyedhVolKLARf1Gw03I8o7L6RXvgpsQXH9Ki3SjihcycMo5Zj+O9L\nszyzjEWdmE+RS6SSiQq7HfGjvxbS6Qtmd6hfCXFlAzkXzuDHBl6SMoEM3npG4+Xu\nI6YBoeXDByT0SGxdfbJ/S1l6up/j7CFE/SaxqkhnvBCVjoDM3f7ViOxhqkcG4gIS\n+ZvEC+rGwAfgtO/gTHbgnBkfL0TV3iiIBinD5WObtabwx4q5K1BahwH60BnOsVTB\n11+eQyRNAgMBAAECggEATKIifxNtqOctm0zH5nNPUJJ9AZhChaCB92oaG0xbWBsH\nRRCBQCW0e7yQMJgSOa/gDN3OMaLhHJhvYH+cVdt3WUrqkUjAEIhNpxE7mcyUeCLV\nigKuspwOHHM2Dt2oFHQWWsfOZwvWruhhNzlZiLbHGmRtNQaA0SFDe1gJzD5QoXla\ny2vE1cuYabuMpvGBqKNWbe7AjD/SAtoJUncVfc0YsNrk5UnIiNKQ3bwGHXFRFq4N\nrzN/wU+jqkcSSroLR+TrS2w0pcTInD4mmlF4MyXGFB4pQnBdb/y1u4Zutqo0TJ/t\nZHuXG1nKDVoXk6tmroujFN8OQ54oRM2om/aWTk6izwKBgQD2jArPN+0WYodSnjhF\nMxyLAQDWwGAh0BwUJlgCp1u16u5XJftgVShREPuhSeh6fzihJSNG2s8OV/H/16pE\nKsJ2/VZfr54rwOFxyx2O8/tANldgU0FHv6LgJNA9HoFq2Sby0UpPW1VGJiDyt4F8\ny++uy9bxZb6MU4zO4YsDj2qybwKBgQDL5LvohCgoxTK22e9nOSj9HhtGXfdE2rEY\ny64SRo4gxVGdEwWywnF/4DeRnuHx/HgVEY+ljDQxlviWYF9R27vCxnN/nmZiuAEV\n6y8Lyme5Ut/68ranjGzGmaSw6Dj0XjugTrvG9hBakGEIQ2SmIw8k25obtz2fzukI\nwpWDmbBDAwKBgQDHsw9eYVJs+0nZJcc2ZfwMq7deO1yihsr3l0dafuzOIYkElgNT\nOCb74uGu9wqTjlD0VfyI+9sTJzEhpjKIHIp/jxxTTRC1J/p0Da3XiNBOZrXHlCgg\nUZ1AKRFzMC5ruZDOxa+HL9eWhnPRpcoAp79wujNUPLFnQJWhTRcovxYRiQKBgGC/\nGy6cLtYRpBvBU2ieZcWdGIIOKjtArdG/K8y+L8h6+FvY39ZPjz2HLbbqNfn1uyD8\nITYDTezN3wyzk+cqpXApbDp89cYX22QEIWGt3APCwEa6DlN4PVELLGtI9WV2pUJO\nuakRrvbaFUCvgb2XWyM5FGncS+BddJPUiM9WCJ3zAoGBAIVkxdga05j85uSwnw26\nQNGD3AMFSUbOJG3BxqfGM2RfBP5aNUqR5AdyuOMFPsEO4bQ1ux1qy4qvlMhtobN9\ngd+YVtKtjMB63R7JWJ0kk6BzjldzsdjjE2RBDT82w1Ajz8ihmc3STFXdDo/MF5CG\n1yU66Qwzv2Zjrghbv4sYvsZv\n-----END PRIVATE KEY-----\n",
+  "client_email": "crm-elumia@crm-elumia-500021.iam.gserviceaccount.com",
+  "client_id": "106706005522343975411",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/crm-elumia%40crm-elumia-500021.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
