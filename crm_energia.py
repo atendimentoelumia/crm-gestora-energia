@@ -141,7 +141,7 @@ elif st.session_state.page == 3:
     
     st.markdown("---")
     
-    st.markdown("<h3 style='text-align: center; color: #2E86C1; margin-bottom: 30px;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #dceb15; margin-bottom: 30px;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
     
     # ==========================================
     # CONFIGURAÇÃO DOS 3 ESPECIALISTAS
