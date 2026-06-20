@@ -1,179 +1,135 @@
 import streamlit as st
-import uuid
+import requests
+import urllib.parse
 
-st.set_page_config(page_title="CRM E-lumia", layout="wide")
+# Configuração da página para ficar amigável em celulares
+st.set_page_config(page_title="Simulador de Economia de Energia", layout="centered")
 
-st.markdown("""
-    <style>
-    div[data-testid="stVerticalBlock"] > div {
-        background-color: #1E1E1E; padding: 12px; border-radius: 8px; border-left: 4px solid #4CAF50;
-    }
-    .card-title { color: #4CAF50; font-weight: bold; font-size: 16px; margin-bottom: 5px; }
-    .card-info { font-size: 13px; color: #E0E0E0; margin-bottom: 3px; }
-    .card-money { font-size: 14px; color: #FFD700; font-weight: bold; margin-top: 5px; margin-bottom: 5px;}
-    </style>
-""", unsafe_allow_html=True)
+# Controle das telas (páginas) do app
+if 'page' not in st.session_state:
+    st.session_state.page = 1
 
-st.title("⚡ CRM E-lumia")
+def next_page():
+    st.session_state.page += 1
 
-# As duas esteiras separadas
-FASES_LEADS = ["A Contatar", "Contatado", "Quente", "Stand by"]
-# REMOVIDO: "Contato feito"
-FASES_CRM = ["Fatura recebida", "Aguardando estudo", "Aguardando reunião", "Proposta apresentada", "Aguardando decisão", "Ganho", "Perdido"]
-
-if 'leads' not in st.session_state:
-    st.session_state.leads = []
-if 'lead_em_edicao' not in st.session_state:
-    st.session_state.lead_em_edicao = None
-if 'lead_para_converter' not in st.session_state:
-    st.session_state.lead_para_converter = None
+def reset():
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.session_state.page = 1
 
 # ==========================================
-# BARRA LATERAL: INTELIGÊNCIA DOS FORMULÁRIOS
+# TELA 1: DADOS DE CONTATO
 # ==========================================
-with st.sidebar:
-    if st.session_state.lead_para_converter:
-        # --- FORMULÁRIO DE CONVERSÃO (QUENTE -> FATURA RECEBIDA) ---
-        st.header("🔥 Converter Oportunidade")
-        st.warning("Para mover para 'Fatura Recebida', preencha os dados técnicos.")
-        lead_conv = st.session_state.lead_para_converter
+if st.session_state.page == 1:
+    st.title("⚡ Simulador de Economia de Energia")
+    st.write("Preencha seus dados abaixo para descobrirmos o quanto você pode economizar.")
+    
+    with st.form("form_contato"):
+        nome = st.text_input("Nome Completo")
+        email = st.text_input("E-mail")
+        telefone = st.text_input("Telefone de contato (WhatsApp)")
         
-        with st.form("form_conversao"):
-            produto = st.selectbox("Produto", ["Mercado Livre", "GD"])
-            consumo_kwh = st.number_input("Consumo médio (kWh)", min_value=0.0, step=100.0)
-            fee_gestao = st.number_input("Fee Gestão (R$/MWh)", min_value=0.0, step=1.0)
-            tempo_contrato = st.number_input("Tempo de contrato (Meses)", min_value=0, step=12)
-            
-            if st.form_submit_button("Confirmar Conversão"):
-                for idx, l in enumerate(st.session_state.leads):
-                    if l['id'] == lead_conv['id']:
-                        gestao_mensal = (consumo_kwh / 1000) * fee_gestao
-                        receita_gestao = gestao_mensal * tempo_contrato
-                        st.session_state.leads[idx].update({
-                            "fase": "Fatura recebida", # Move para o CRM!
-                            "produto": produto, "consumo": consumo_kwh, "fee_gestao": fee_gestao,
-                            "tempo_contrato": tempo_contrato, "gestao_mensal": gestao_mensal, "receita_gestao": receita_gestao
-                        })
-                        break
-                st.session_state.lead_para_converter = None
+        submit = st.form_submit_button("Próximo passo")
+        
+        if submit:
+            if nome and email and telefone:
+                # Salva os dados na sessão
+                st.session_state.nome = nome
+                st.session_state.email = email
+                st.session_state.telefone = telefone
+                next_page()
                 st.rerun()
-                
-        if st.button("Cancelar"):
-            st.session_state.lead_para_converter = None
-            st.rerun()
-
-    elif st.session_state.lead_em_edicao:
-        # --- FORMULÁRIO DE EDIÇÃO ---
-        st.header("✏️ Editar")
-        lead_atual = st.session_state.lead_em_edicao
-        with st.form("form_edit"):
-            empresa = st.text_input("Empresa", value=lead_atual.get('empresa', ''))
-            contato = st.text_input("Contato", value=lead_atual.get('contato', ''))
-            status = st.text_area("Status / Observações", value=lead_atual.get('status', ''))
-            if st.form_submit_button("Atualizar"):
-                for idx, l in enumerate(st.session_state.leads):
-                    if l['id'] == lead_atual['id']:
-                        st.session_state.leads[idx].update({"empresa": empresa, "contato": contato, "status": status})
-                        break
-                st.session_state.lead_em_edicao = None
-                st.rerun()
-        if st.button("Cancelar Edição"):
-            st.session_state.lead_em_edicao = None
-            st.rerun()
-
-    else:
-        # --- FORMULÁRIO DE CADASTRO SIMPLES (PROSPECÇÃO) ---
-        st.header("➕ Cadastrar Novo Prospect")
-        with st.form("form_novo_prospect", clear_on_submit=True):
-            empresa = st.text_input("Nome da empresa *")
-            executivo = st.selectbox("Executivo", ["Roberto", "Thaiz", "Peterson"])
-            contato = st.text_input("Contato na empresa")
-            canal = st.selectbox("Canal", ["Direto", "Parceiro"])
-            
-            if st.form_submit_button("Salvar Prospect"):
-                if empresa:
-                    novo_lead = {
-                        "id": str(uuid.uuid4()),
-                        "fase": "A Contatar", # Nasce sempre no primeiro funil
-                        "empresa": empresa, "executivo": executivo, "contato": contato, "canal": canal,
-                        "consumo": 0, "receita_gestao": 0 # Dados zerados por enquanto
-                    }
-                    st.session_state.leads.append(novo_lead)
-                    st.success("Prospect adicionado!")
-                    st.rerun()
+            else:
+                st.error("Por favor, preencha todos os campos para continuar.")
 
 # ==========================================
-# FUNÇÃO PARA DESENHAR OS CARTÕES
+# TELA 2: DADOS DA FATURA E CEP
 # ==========================================
-def desenhar_cartao(lead, lista_fases):
-    st.markdown(f"<div class='card-title'>{lead.get('empresa')}</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='card-info'>👤 {lead.get('contato', '')} ({lead.get('executivo', '')})</div>", unsafe_allow_html=True)
+elif st.session_state.page == 2:
+    st.title("📍 Dados da Instalação")
+    st.write("Agora, informe o local e o valor médio da sua conta de luz.")
     
-    if lead.get('receita_gestao', 0) > 0:
-        st.markdown(f"<div class='card-info'>⚡ {lead.get('produto', '')} | {lead.get('consumo', 0):,.0f} kWh</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='card-money'>💰 R$ {lead.get('receita_gestao', 0):,.2f}</div>", unsafe_allow_html=True)
+    # Campo de CEP
+    cep = st.text_input("CEP (Apenas números)", max_chars=8)
+    endereco_completo = ""
     
-    col_edit, col_del = st.columns(2)
-    with col_edit:
-        if st.button("✏️", key=f"edit_{lead['id']}", help="Editar"):
-            st.session_state.lead_em_edicao = lead
-            st.rerun()
-    with col_del:
-        if st.button("❌", key=f"del_{lead['id']}", help="Excluir"):
-            st.session_state.leads.remove(lead)
-            st.rerun()
+    # API do ViaCEP para busca automática
+    if len(cep) == 8:
+        try:
+            response = requests.get(f"https://viacep.com.br/ws/{cep}/json/")
+            data = response.json()
+            if "erro" not in data:
+                endereco_completo = f"{data['logradouro']}, {data['bairro']} - {data['localidade']}/{data['uf']}"
+                st.success(f"Endereço encontrado: **{endereco_completo}**")
+            else:
+                st.error("CEP não encontrado. Verifique os números.")
+        except:
+            st.error("Erro ao buscar o CEP na base de dados.")
             
-    fase_atual = lead.get('fase')
-    indice_fase = lista_fases.index(fase_atual)
+    # Campo de Valor da Fatura
+    valor_fatura = st.number_input("Valor médio da sua fatura de energia (R$)", min_value=0.0, format="%.2f")
     
-    col_esq, col_dir = st.columns(2)
-    with col_esq:
-        if indice_fase > 0:
-            if st.button("⬅️", key=f"esq_{lead['id']}"):
-                lead['fase'] = lista_fases[indice_fase - 1]
-                st.rerun()
-    with col_dir:
-        # AQUI ESTÁ A REGRA: Se for o último do funil de Leads, o botão muda para "Converter"
-        if lista_fases == FASES_LEADS and indice_fase == len(FASES_LEADS) - 1:
-            pass # Fica em Stand By, não avança direto
-        elif lista_fases == FASES_LEADS and fase_atual == "Quente":
-            if st.button("🚀 Converter", key=f"conv_{lead['id']}"):
-                st.session_state.lead_para_converter = lead
-                st.rerun()
-        elif indice_fase < len(lista_fases) - 1:
-            if st.button("➡️", key=f"dir_{lead['id']}"):
-                lead['fase'] = lista_fases[indice_fase + 1]
-                st.rerun()
+    # Botão para calcular
+    if st.button("Calcular Minha Economia"):
+        if endereco_completo and valor_fatura > 0:
+            st.session_state.valor_fatura = valor_fatura
+            next_page()
+            st.rerun()
+        else:
+            st.warning("Certifique-se de que o CEP é válido e de preencher o valor da fatura.")
 
 # ==========================================
-# PAINEL 1: ESTEIRA DE PROSPECÇÃO (LEADS)
+# TELA 3: RESULTADOS E WHATSAPP
 # ==========================================
-st.markdown("### 🎯 Esteira de Prospecção (SDR)")
-colunas_leads = st.columns(len(FASES_LEADS))
-for index, fase in enumerate(FASES_LEADS):
-    with colunas_leads[index]:
-        st.markdown(f"##### {fase}")
-        leads_fase = [l for l in st.session_state.leads if l.get("fase") == fase]
-        st.markdown(f"<span style='color:gray; font-size:12px;'>{len(leads_fase)} prospects</span>", unsafe_allow_html=True)
-        st.write("---")
-        for lead in leads_fase:
-            desenhar_cartao(lead, FASES_LEADS)
-            st.write("")
-
-st.write("---")
-
-# ==========================================
-# PAINEL 2: PIPELINE DE VENDAS (CLOSER)
-# ==========================================
-st.markdown("### 💰 Pipeline de Vendas (Fechamento)")
-colunas_crm = st.columns(len(FASES_CRM))
-for index, fase in enumerate(FASES_CRM):
-    with colunas_crm[index]:
-        st.markdown(f"##### {fase}")
-        leads_fase = [l for l in st.session_state.leads if l.get("fase") == fase]
-        valor_fase = sum(l.get('receita_gestao', 0) for l in leads_fase)
-        st.markdown(f"<span style='color:gray; font-size:12px;'>{len(leads_fase)} cards | R$ {valor_fase:,.2f}</span>", unsafe_allow_html=True)
-        st.write("---")
-        for lead in leads_fase:
-            desenhar_cartao(lead, FASES_CRM)
-            st.write("")
+elif st.session_state.page == 3:
+    st.title("💰 Sua Economia Estimada")
+    
+    # Cálculos
+    valor_fatura = st.session_state.valor_fatura
+    desconto = 0.12 # 12%
+    
+    economia_mensal = valor_fatura * desconto
+    economia_anual = economia_mensal * 12
+    economia_contrato = economia_anual * 5
+    
+    # Função auxiliar para formatar moeda no padrão brasileiro
+    def formata_moeda(valor):
+        return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    
+    # Exibição dos dados
+    st.info(f"Analisamos sua fatura média de {formata_moeda(valor_fatura)} e aplicamos 12% de desconto.")
+    
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Economia Mensal", formata_moeda(economia_mensal))
+    col2.metric("Economia Anual", formata_moeda(economia_anual))
+    col3.metric("Contrato (5 Anos)", formata_moeda(economia_contrato))
+    
+    st.markdown("---")
+    
+    # Frase de impacto
+    st.markdown("<h3 style='text-align: center; color: #2E86C1;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
+    
+    # Geração do link do WhatsApp
+    # COLOQUE O NÚMERO DA SUA EMPRESA AQUI (com código do país 55 e DDD)
+    numero_empresa = "5511999999999" 
+    
+    mensagem_padrao = f"Olá! Meu nome é {st.session_state.nome}. Acabei de usar o simulador e vi que posso economizar até {formata_moeda(economia_mensal)} por mês. Gostaria de saber mais!"
+    mensagem_codificada = urllib.parse.quote(mensagem_padrao)
+    link_whatsapp = f"https://wa.me/{numero_empresa}?text={mensagem_codificada}"
+    
+    # Botão visual para o WhatsApp
+    st.markdown(
+        f"""
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{link_whatsapp}" target="_blank" style="background-color: #25D366; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 18px; border-radius: 8px; font-weight: bold;">
+                Falar com um Especialista no WhatsApp
+            </a>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+    
+    st.markdown("---")
+    if st.button("Fazer nova simulação"):
+        reset()
+        st.rerun()
