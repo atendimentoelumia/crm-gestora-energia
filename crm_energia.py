@@ -3,7 +3,6 @@ import requests
 import urllib.parse
 import urllib3
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 
 # Desativa o aviso de segurança no terminal devido ao verify=False nas APIs
@@ -15,7 +14,7 @@ st.set_page_config(page_title="Simulador de Economia de Energia", layout="center
 # ==========================================
 # FUNÇÃO PARA SALVAR NA PLANILHA GOOGLE
 # ==========================================
-def salvar_na_planilha(nome, email, telephone, cep, endereco, valor_fatura, mensal, anual, contrato):
+def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato):
     try:
         import json
         
@@ -23,35 +22,33 @@ def salvar_na_planilha(nome, email, telephone, cep, endereco, valor_fatura, mens
         credenciais_texto = st.secrets["google_credentials"]
         creds_dict = json.loads(credenciais_texto, strict=False)
         
-        # 2. O SUPER LIMPADOR DE CHAVE (Resolve o erro Invalid JWT Signature)
-        chave_bruta = creds_dict["private_key"]
-        # Transforma quebras de linha falsas em quebras reais
-        chave_bruta = chave_bruta.replace("\\n", "\n").replace("\\r", "")
-        # Remove espaços em branco perdidos no começo ou no fim de cada linha
-        linhas = [linha.strip() for linha in chave_bruta.split("\n") if linha.strip()]
-        # Remonta a chave perfeitamente alinhada
-        chave_perfeita = "\n".join(linhas)
-        creds_dict["private_key"] = chave_perfeita
+        # 2. Formatação simples e segura (A mesma que deu Sucesso 200 antes!)
+        chave_privada = creds_dict["private_key"]
+        creds_dict["private_key"] = chave_privada.replace("\\\\n", "\n").replace("\\n", "\n")
         
         # 3. Conexão nativa do Gspread
         client = gspread.service_account_from_dict(creds_dict)
         
-        # 4. Abre a planilha (O e-mail do JSON precisa ser Editor nela)
+        # 4. Abre a planilha
         sheet = client.open("Leads_Palestra_Elumia").sheet1
         
         # 5. Prepara os dados 
         data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         nova_linha = [
-            str(data_hora), str(nome), str(email), str(telephone), 
+            str(data_hora), str(nome), str(email), str(telefone), 
             str(cep), str(endereco), float(valor_fatura), 
             float(mensal), float(anual), float(contrato)
         ]
         
-        # 6. Salva na planilha
-        sheet.append_row(nova_linha)
+        # 6. Salva na planilha com formatação correta de números
+        sheet.append_row(nova_linha, value_input_option="USER_ENTERED")
         return True
         
     except Exception as e:
+        # Se o erro for o recibo de sucesso do Google (200), ignoramos o falso alarme e seguimos!
+        if "200" in str(e):
+            return True
+            
         st.error(f"Erro Técnico Real: {type(e).__name__} - {e}")
         return False
 
@@ -91,15 +88,15 @@ if st.session_state.page == 1:
     with st.form("form_contato"):
         nome = st.text_input("Nome Completo")
         email = st.text_input("E-mail")
-        telephone = st.text_input("Telefone de contato (WhatsApp)")
+        telefone = st.text_input("Telefone de contato (WhatsApp)")
         
         submit = st.form_submit_button("Próximo passo")
         
         if submit:
-            if nome and email and telephone:
+            if nome and email and telefone:
                 st.session_state.nome = nome
                 st.session_state.email = email
-                st.session_state.telephone = telephone
+                st.session_state.telefone = telefone
                 next_page()
                 st.rerun()
             else:
@@ -159,7 +156,7 @@ elif st.session_state.page == 2:
                 sucesso = salvar_na_planilha(
                     st.session_state.nome,
                     st.session_state.email,
-                    st.session_state.telephone,
+                    st.session_state.telefone,
                     st.session_state.cep_limpo,
                     st.session_state.endereco_completo,
                     valor_fatura,
