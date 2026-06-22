@@ -14,7 +14,7 @@ st.set_page_config(page_title="Transformando Custo em Lucro", layout="centered")
 # NOVA FUNÇÃO: SALVAR NO FORMSPREE
 # ==========================================
 def enviar_para_formspree(nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato):
-    # COLOQUE O SEU LINK DO FORMSPREE NA LINHA ABAIXO:
+    # LINK DO FORMSPREE:
     LINK_FORMSPREE = "https://formspree.io/f/mnjkqwbq"
     
     try:
@@ -49,8 +49,10 @@ def enviar_para_formspree(nome, email, telefone, cep, endereco, valor_fatura, me
 # ==========================================
 # CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
 # ==========================================
-LOGO_ELUMIA = "https://via.placeholder.com/150x40.png?text=E-lumia" 
-LOGO_PARCEIRO = "https://via.placeholder.com/150x60.png?text=Logo+Parceiro"
+
+# ---> ALERTA: Troque os nomes abaixo pelo nome real das suas imagens! <---
+LOGO_ELUMIA = "LOGO_ELUMIA.png" 
+LOGO_PARCEIRO = "LOGO_PARCEIRO.png"
 
 col_logo1, espaco, col_logo2 = st.columns([1, 2, 1])
 with col_logo1:
