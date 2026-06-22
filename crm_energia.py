@@ -17,22 +17,34 @@ st.set_page_config(page_title="Simulador de Economia de Energia", layout="center
 def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato):
     try:
         import json
+        import textwrap
         
         # 1. Lê o texto bruto do cofre do Streamlit
         credenciais_texto = st.secrets["google_credentials"]
         creds_dict = json.loads(credenciais_texto, strict=False)
         
-        # 2. Formatação simples e segura (A mesma que deu Sucesso 200 antes!)
-        chave_privada = creds_dict["private_key"]
-        creds_dict["private_key"] = chave_privada.replace("\\\\n", "\n").replace("\\n", "\n")
+        # ==========================================
+        # 2. RECONSTRUTOR DE CHAVE BLINDADO
+        # ==========================================
+        chave_bruta = creds_dict["private_key"]
         
-        # 3. Conexão nativa do Gspread
+        # Arranca qualquer sujeira, espaço ou linha quebrada que o navegador adicionou
+        chave_limpa = chave_bruta.replace("-----BEGIN PRIVATE KEY-----", "")
+        chave_limpa = chave_limpa.replace("-----END PRIVATE KEY-----", "")
+        chave_limpa = chave_limpa.replace("\\n", "").replace("\n", "").replace("\r", "").replace(" ", "")
+        
+        # Remonta a chave perfeitamente em blocos de 64 caracteres (Padrão exato do Google)
+        chave_perfeita = "-----BEGIN PRIVATE KEY-----\n" + "\n".join(textwrap.wrap(chave_limpa, 64)) + "\n-----END PRIVATE KEY-----\n"
+        
+        creds_dict["private_key"] = chave_perfeita
+        
+        # 3. Conexão nativa do Gspread com a chave reconstruída
         client = gspread.service_account_from_dict(creds_dict)
         
         # 4. Abre a planilha
         sheet = client.open("Leads_Palestra_Elumia").sheet1
         
-        # 5. Prepara os dados 
+        # 5. Prepara os dados
         data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         nova_linha = [
             str(data_hora), str(nome), str(email), str(telefone), 
@@ -40,15 +52,11 @@ def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensa
             float(mensal), float(anual), float(contrato)
         ]
         
-        # 6. Salva na planilha com formatação correta de números
+        # 6. Salva na planilha
         sheet.append_row(nova_linha, value_input_option="USER_ENTERED")
         return True
         
     except Exception as e:
-        # Se o erro for o recibo de sucesso do Google (200), ignoramos o falso alarme e seguimos!
-        if "200" in str(e):
-            return True
-            
         st.error(f"Erro Técnico Real: {type(e).__name__} - {e}")
         return False
 
