@@ -54,9 +54,9 @@ LOGO_PARCEIRO = "https://via.placeholder.com/150x60.png?text=Logo+Parceiro"
 
 col_logo1, espaco, col_logo2 = st.columns([1, 2, 1])
 with col_logo1:
-    st.image(LOGO_ELUMIA.png, use_container_width=True)
+    st.image(LOGO_ELUMIA, use_container_width=True)
 with col_logo2:
-    st.image(LOGO_PARCEIRO.png, use_container_width=True)
+    st.image(LOGO_PARCEIRO, use_container_width=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
