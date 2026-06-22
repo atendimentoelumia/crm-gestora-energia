@@ -28,7 +28,6 @@ def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensa
         client = gspread.authorize(creds)
         
         # ABRA A PLANILHA PELO NOME EXATO DELA
-        # Certifique-se de que o e-mail da conta de serviço é "Editor" na planilha
         sheet = client.open("Leads_Palestra_Elumia").sheet1
         
         # Pega a data e hora atual do preenchimento
@@ -42,15 +41,15 @@ def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensa
         return True
         
     except Exception as e:
-        # Se der erro, avisa nos bastidores (Não trava a tela do cliente)
-        st.write(f"Erro ao salvar na planilha: {e}")
+        # Se der erro, avisa na tela
+        st.error(f"Detalhe técnico do erro: {e}")
         return False
 
 # ==========================================
 # CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
 # ==========================================
-LOGO_ELUMIA = "LOGO_ELUMIA.png" 
-LOGO_PARCEIRO = "LOGO_PARCEIRO.png"
+LOGO_ELUMIA = "https://via.placeholder.com/150x50.png?text=E-lumia" 
+LOGO_PARCEIRO = "https://via.placeholder.com/150x50.png?text=Logo+Parceiro"
 
 col_logo1, espaco, col_logo2 = st.columns([1, 2, 1])
 with col_logo1:
@@ -135,7 +134,7 @@ elif st.session_state.page == 2:
             
     valor_fatura = st.number_input("Valor médio da sua fatura de energia (R$)", min_value=0.0, format="%.2f")
     
-  if st.button("Calcular Minha Economia"):
+    if st.button("Calcular Minha Economia"):
         if endereco_completo and valor_fatura > 0:
             st.session_state.valor_fatura = valor_fatura
             st.session_state.endereco_completo = endereco_completo
@@ -165,7 +164,6 @@ elif st.session_state.page == 2:
                 next_page()
                 st.rerun()
             else:
-                # Se deu erro, ele não muda de tela e exibe a falha para você investigar
                 st.error("Não foi possível salvar os dados na planilha. Verifique o erro técnico acima.")
         else:
             st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
@@ -181,7 +179,7 @@ elif st.session_state.page == 3:
     
     economia_mensal = valor_fatura * desconto
     economia_anual = economia_mensal * 12
-    economia_contrato = economy_anual = economia_mensal * 12 * 5 # (Mensal * 12 * 5)
+    economia_contrato = economia_anual * 5
     
     def formata_moeda(valor):
         return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -191,13 +189,15 @@ elif st.session_state.page == 3:
     col1, col2, col3 = st.columns(3)
     col1.metric("Economia Mensal", formata_moeda(economia_mensal))
     col2.metric("Economia Anual", formata_moeda(economia_anual))
-    col3.metric("Contrato (5 Anos)", formata_moeda(economia_anual * 5))
+    col3.metric("Contrato (5 Anos)", formata_moeda(economia_contrato))
     
     st.markdown("---")
     
     st.markdown("<h3 style='text-align: center; color: #2E86C1; margin-bottom: 30px;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
     
+    # ==========================================
     # CONFIGURAÇÃO DOS 3 ESPECIALISTAS
+    # ==========================================
     nome_esp1 = "João Paulo"
     num_esp1 = "5511999999991"
     
@@ -221,6 +221,7 @@ elif st.session_state.page == 3:
     st.link_button(f"📱 Falar com {nome_esp3}", link_wpp3, use_container_width=True)
     
     st.markdown("---")
+    
     if st.button("Fazer nova simulação", use_container_width=True):
         reset()
         st.rerun()
