@@ -50,7 +50,6 @@ def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensa
         # Mostra o erro na tela se algo falhar
         st.error(f"Detalhe técnico do erro: {e}")
         return False
-
 # ==========================================
 # CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
 # ==========================================
