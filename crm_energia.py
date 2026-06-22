@@ -2,62 +2,48 @@ import streamlit as st
 import requests
 import urllib.parse
 import urllib3
-import gspread
 from datetime import datetime
 
-# Desativa o aviso de segurança no terminal devido ao verify=False nas APIs
+# Desativa o aviso de segurança no terminal
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Configuração da página
 st.set_page_config(page_title="Simulador de Economia de Energia", layout="centered")
 
 # ==========================================
-# FUNÇÃO PARA SALVAR NA PLANILHA GOOGLE
+# NOVA FUNÇÃO: SALVAR NO FORMSPREE
 # ==========================================
-def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato):
+def enviar_para_formspree(nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato):
+    # COLOQUE O SEU LINK DO FORMSPREE NA LINHA ABAIXO:
+    LINK_FORMSPREE = "https://formspree.io/f/mnjkqwbq"
+    
     try:
-        import json
-        import textwrap
+        # Empacota os dados de forma limpa
+        dados = {
+            "Data e Hora": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            "Nome": nome,
+            "E-mail": email,
+            "WhatsApp": telefone,
+            "CEP": cep,
+            "Endereço": endereco,
+            "Valor da Fatura (R$)": f"{valor_fatura:.2f}",
+            "Economia Mensal (R$)": f"{mensal:.2f}",
+            "Economia Anual (R$)": f"{anual:.2f}",
+            "Economia Contrato (R$)": f"{contrato:.2f}"
+        }
         
-        # 1. Lê o texto bruto do cofre do Streamlit
-        credenciais_texto = st.secrets["google_credentials"]
-        creds_dict = json.loads(credenciais_texto, strict=False)
+        # Envia os dados para o Formspree
+        resposta = requests.post(LINK_FORMSPREE, json=dados)
         
-        # ==========================================
-        # 2. RECONSTRUTOR DE CHAVE BLINDADO
-        # ==========================================
-        chave_bruta = creds_dict["private_key"]
-        
-        # Arranca qualquer sujeira, espaço ou linha quebrada que o navegador adicionou
-        chave_limpa = chave_bruta.replace("-----BEGIN PRIVATE KEY-----", "")
-        chave_limpa = chave_limpa.replace("-----END PRIVATE KEY-----", "")
-        chave_limpa = chave_limpa.replace("\\n", "").replace("\n", "").replace("\r", "").replace(" ", "")
-        
-        # Remonta a chave perfeitamente em blocos de 64 caracteres (Padrão exato do Google)
-        chave_perfeita = "-----BEGIN PRIVATE KEY-----\n" + "\n".join(textwrap.wrap(chave_limpa, 64)) + "\n-----END PRIVATE KEY-----\n"
-        
-        creds_dict["private_key"] = chave_perfeita
-        
-        # 3. Conexão nativa do Gspread com a chave reconstruída
-        client = gspread.service_account_from_dict(creds_dict)
-        
-        # 4. Abre a planilha
-        sheet = client.open("Leads_Palestra_Elumia").sheet1
-        
-        # 5. Prepara os dados
-        data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        nova_linha = [
-            str(data_hora), str(nome), str(email), str(telefone), 
-            str(cep), str(endereco), float(valor_fatura), 
-            float(mensal), float(anual), float(contrato)
-        ]
-        
-        # 6. Salva na planilha
-        sheet.append_row(nova_linha, value_input_option="USER_ENTERED")
-        return True
-        
+        # O código 200 significa que o Formspree recebeu com sucesso!
+        if resposta.status_code == 200:
+            return True
+        else:
+            st.error(f"Erro ao enviar: O Formspree retornou o código {resposta.status_code}")
+            return False
+            
     except Exception as e:
-        st.error(f"Erro Técnico Real: {type(e).__name__} - {e}")
+        st.error(f"Erro de conexão com o Formspree: {e}")
         return False
 
 # ==========================================
@@ -160,8 +146,8 @@ elif st.session_state.page == 2:
             economia_anual = economia_mensal * 12
             economia_contrato = economia_anual * 5
             
-            with st.spinner("Salvando informações e gerando cálculo..."):
-                sucesso = salvar_na_planilha(
+            with st.spinner("Processando simulação..."):
+                sucesso = enviar_para_formspree(
                     st.session_state.nome,
                     st.session_state.email,
                     st.session_state.telefone,
@@ -177,7 +163,7 @@ elif st.session_state.page == 2:
                 next_page()
                 st.rerun()
             else:
-                st.error("Não foi possível avançar porque o salvamento na planilha falhou. Veja o erro técnico detalhado acima.")
+                st.error("Falha ao se conectar com o banco de dados. Tente novamente.")
         else:
             st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
 
