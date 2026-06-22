@@ -18,42 +18,30 @@ st.set_page_config(page_title="Simulador de Economia de Energia", layout="center
 def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato):
     try:
         import json
-        import os
         
         # 1. Lê o texto bruto do cofre do Streamlit
         credenciais_texto = st.secrets["google_credentials"]
-        credenciais_dict = json.loads(credenciais_texto, strict=False)
+        creds_dict = json.loads(credenciais_texto, strict=False)
         
-        # 2. Limpeza definitiva: conserta qualquer quebra de linha danificada no copia e cola
-        credenciais_dict["private_key"] = credenciais_dict["private_key"].replace('\\n', '\n')
+        # 2. Força a formatação correta da chave privada (corrige duplicidade de barras)
+        chave_privada = creds_dict["private_key"]
+        creds_dict["private_key"] = chave_privada.replace("\\\\n", "\n").replace("\\n", "\n")
         
-        # 3. Cria um arquivo temporário no servidor (método mais estável para o Google)
-        with open("temp_key.json", "w") as temp_file:
-            json.dump(credenciais_dict, temp_file)
-            
-        # 4. Define o escopo e autoriza LENDO DO ARQUIVO
-        scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/drive']
-        creds = ServiceAccountCredentials.from_json_keyfile_name("temp_key.json", scope)
-        client = gspread.authorize(creds)
+        # 3. Usa a conexão nativa e moderna do Gspread (Mais segura)
+        client = gspread.service_account_from_dict(creds_dict)
         
-        # 5. Abre a planilha (O e-mail do JSON precisa estar como Editor nela!)
+        # 4. Abre a planilha (Lembre-se: o novo e-mail precisa ser Editor nela)
         sheet = client.open("Leads_Palestra_Elumia").sheet1
         
-        # Pega a data e hora atual do preenchimento
+        # 5. Pega a data/hora e salva
         data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        
-        # Prepara a linha e salva
         nova_linha = [data_hora, nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato]
         sheet.append_row(nova_linha)
         
-        # 6. Apaga o arquivo temporário por segurança
-        if os.path.exists("temp_key.json"):
-            os.remove("temp_key.json")
-            
         return True
         
     except Exception as e:
-        # Se algo falhar, exibe o erro
+        # Se algo falhar, exibe o erro exato
         st.error(f"Detalhe técnico do erro: {e}")
         return False
 # ==========================================
