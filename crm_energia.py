@@ -22,26 +22,32 @@ def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensa
         # Define o escopo de acesso
         scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/drive']
         
-        # Lê as credenciais diretamente do cofre seguro do Streamlit (Secrets)
-        creds_dict = json.loads(st.secrets["google_credentials"])
+        # Lê as credenciais do cofre do Streamlit
+        creds_dict = json.loads(st.secrets["google_credentials"], strict=False)
+        
+        # ==========================================
+        # A LINHA MÁGICA QUE CONSERTA A ASSINATURA:
+        # ==========================================
+        creds_dict["private_key"] = creds_dict["private_key"].replace('\\n', '\n')
+        
+        # Autoriza a conexão
         creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
         client = gspread.authorize(creds)
         
-        # ABRA A PLANILHA PELO NOME EXATO DELA
+        # Abre a planilha
         sheet = client.open("Leads_Palestra_Elumia").sheet1
         
         # Pega a data e hora atual do preenchimento
         data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         
-        # Prepara a linha com os dados formatados
+        # Prepara a linha e salva
         nova_linha = [data_hora, nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato]
-        
-        # Adiciona a linha na planilha
         sheet.append_row(nova_linha)
+        
         return True
         
     except Exception as e:
-        # Se der erro, avisa na tela
+        # Mostra o erro na tela se algo falhar
         st.error(f"Detalhe técnico do erro: {e}")
         return False
 
