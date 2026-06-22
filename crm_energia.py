@@ -23,25 +23,31 @@ def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensa
         credenciais_texto = st.secrets["google_credentials"]
         creds_dict = json.loads(credenciais_texto, strict=False)
         
-        # 2. Força a formatação correta da chave privada (corrige duplicidade de barras)
+        # 2. Força a formatação correta da chave
         chave_privada = creds_dict["private_key"]
         creds_dict["private_key"] = chave_privada.replace("\\\\n", "\n").replace("\\n", "\n")
         
-        # 3. Usa a conexão nativa e moderna do Gspread (Mais segura)
+        # 3. Conexão
         client = gspread.service_account_from_dict(creds_dict)
         
-        # 4. Abre a planilha (Lembre-se: o novo e-mail precisa ser Editor nela)
+        # 4. Abre a planilha
         sheet = client.open("Leads_Palestra_Elumia").sheet1
         
         # 5. Pega a data/hora e salva
         data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         nova_linha = [data_hora, nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato]
-        sheet.append_row(nova_linha)
+        
+        # USER_ENTERED garante que a planilha entenda os números como R$ e não como texto
+        sheet.append_row(nova_linha, value_input_option="USER_ENTERED")
         
         return True
         
     except Exception as e:
-        # Se algo falhar, exibe o erro exato
+        # Se o erro for o <Response [200]>, é um falso positivo de sucesso! Deixa passar.
+        if "200" in str(e):
+            return True
+            
+        # Se for um erro real, mostra na tela
         st.error(f"Detalhe técnico do erro: {e}")
         return False
 # ==========================================
