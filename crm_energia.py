@@ -23,37 +23,35 @@ def salvar_na_planilha(nome, email, telephone, cep, endereco, valor_fatura, mens
         credenciais_texto = st.secrets["google_credentials"]
         creds_dict = json.loads(credenciais_texto, strict=False)
         
-        # 2. Força a formatação correta da chave privada
-        chave_privada = creds_dict["private_key"]
-        creds_dict["private_key"] = chave_privada.replace("\\\\n", "\n").replace("\\n", "\n")
+        # 2. O SUPER LIMPADOR DE CHAVE (Resolve o erro Invalid JWT Signature)
+        chave_bruta = creds_dict["private_key"]
+        # Transforma quebras de linha falsas em quebras reais
+        chave_bruta = chave_bruta.replace("\\n", "\n").replace("\\r", "")
+        # Remove espaços em branco perdidos no começo ou no fim de cada linha
+        linhas = [linha.strip() for linha in chave_bruta.split("\n") if linha.strip()]
+        # Remonta a chave perfeitamente alinhada
+        chave_perfeita = "\n".join(linhas)
+        creds_dict["private_key"] = chave_perfeita
         
         # 3. Conexão nativa do Gspread
         client = gspread.service_account_from_dict(creds_dict)
         
-        # 4. Abre a planilha pelo nome exato (Garante que o e-mail do JSON é Editor nela)
+        # 4. Abre a planilha (O e-mail do JSON precisa ser Editor nela)
         sheet = client.open("Leads_Palestra_Elumia").sheet1
         
-        # 5. Prepara os dados limpando os formatos para evitar conflitos de versão
+        # 5. Prepara os dados 
         data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         nova_linha = [
-            str(data_hora), 
-            str(nome), 
-            str(email), 
-            str(telephone), 
-            str(cep), 
-            str(endereco), 
-            float(valor_fatura), 
-            float(mensal), 
-            float(anual), 
-            float(contrato)
+            str(data_hora), str(nome), str(email), str(telephone), 
+            str(cep), str(endereco), float(valor_fatura), 
+            float(mensal), float(anual), float(contrato)
         ]
         
-        # 6. Salva da forma mais pura e compatível possível
+        # 6. Salva na planilha
         sheet.append_row(nova_linha)
         return True
         
     except Exception as e:
-        # Mostra o nome exato do tipo de erro para sabermos o que o Google respondeu
         st.error(f"Erro Técnico Real: {type(e).__name__} - {e}")
         return False
 
