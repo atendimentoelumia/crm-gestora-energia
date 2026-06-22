@@ -8,7 +8,7 @@ from datetime import datetime
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Configuração da página
-st.set_page_config(page_title="Simulador de Economia de Energia", layout="centered")
+st.set_page_config(page_title="Transformando Custo em Lucro", layout="centered")
 
 # ==========================================
 # NOVA FUNÇÃO: SALVAR NO FORMSPREE
@@ -50,13 +50,13 @@ def enviar_para_formspree(nome, email, telefone, cep, endereco, valor_fatura, me
 # CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
 # ==========================================
 LOGO_ELUMIA = "https://via.placeholder.com/150x50.png?text=E-lumia" 
-LOGO_PARCEIRO = "https://via.placeholder.com/150x50.png?text=Logo+Parceiro"
+LOGO_PARCEIRO = "https://via.placeholder.com/150x70.png?text=Logo+Parceiro"
 
 col_logo1, espaco, col_logo2 = st.columns([1, 2, 1])
 with col_logo1:
-    st.image(LOGO_ELUMIA, use_container_width=True)
+    st.image(LOGO_ELUMIA.png, use_container_width=True)
 with col_logo2:
-    st.image(LOGO_PARCEIRO, use_container_width=True)
+    st.image(LOGO_PARCEIRO.png, use_container_width=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -76,7 +76,7 @@ def reset():
 # TELA 1: DADOS DE CONTATO
 # ==========================================
 if st.session_state.page == 1:
-    st.title("⚡ Simulador de Economia de Energia")
+    st.title("⚡ Transformando Custo em Lucro")
     st.write("Preencha os seus dados abaixo para descobrirmos o quanto pode economizar.")
     
     with st.form("form_contato"):
@@ -192,17 +192,17 @@ elif st.session_state.page == 3:
     
     st.markdown("---")
     
-    st.markdown("<h3 style='text-align: center; color: #2E86C1; margin-bottom: 30px;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #ebe715; margin-bottom: 38px;'>ESTA ECONOMIA AJUDARIA SUA EMPRESA HOJE?</h3>", unsafe_allow_html=True)
     
     # CONFIGURAÇÃO DOS 3 ESPECIALISTAS
-    nome_esp1 = "João Paulo"
-    num_esp1 = "5511999999991"
+    nome_esp1 = "THAIZ"
+    num_esp1 = "5511937567788"
     
-    nome_esp2 = "Maria Silva"
-    num_esp2 = "5511999999992"
+    nome_esp2 = "PETERSON"
+    num_esp2 = "5511980781012"
     
-    nome_esp3 = "Carlos Eduardo"
-    num_esp3 = "5511999999993"
+    nome_esp3 = "ROBERTO"
+    num_esp3 = "5511957714063"
     
     mensagem_padrao = f"Olá! Meu nome é {st.session_state.nome}. Acabei de usar o simulador e vi que posso economizar até {formata_moeda(economia_mensal)} por mês. Gostaria de saber como conseguir essa economia!"
     mensagem_codificada = urllib.parse.quote(mensagem_padrao)
