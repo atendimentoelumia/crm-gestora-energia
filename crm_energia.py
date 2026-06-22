@@ -42,7 +42,7 @@ def enviar_para_formspree(nome, email, telefone, cep, endereco, valor_fatura, me
             "Data e Hora": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             "Nome": nome,
             "E-mail": email,
-            "WhatsApp": telephone,
+            "WhatsApp": telefone,
             "CEP": cep,
             "Endereço": endereco,
             "Valor da Fatura (R$)": f"{valor_fatura:.2f}",
@@ -149,10 +149,18 @@ elif st.session_state.page == 2:
     elif len(cep_input) > 0 and len(cep_limpo) != 8:
         st.warning("Continue digitando... O CEP precisa ter 8 números.")
             
-    valor_fatura = st.number_input("Valor médio da sua fatura de energia (R$)", min_value=0.0, format="%.2f")
+    # ---> CAMPO ATUALIZADO AQUI <---
+    valor_fatura = st.number_input(
+        "Valor médio da sua fatura de energia", 
+        min_value=0.0, 
+        value=None,          # Deixa o campo em branco por padrão
+        format="%.2f",       # Garante as duas casas decimais
+        placeholder="R$ 0.00" # Mostra o R$ fantasma no fundo do campo
+    )
     
     if st.button("Calcular Minha Economia"):
-        if endereco_completo and valor_fatura > 0:
+        # A trava agora entende que o campo não pode estar vazio (None)
+        if endereco_completo and valor_fatura is not None and valor_fatura > 0:
             st.session_state.valor_fatura = valor_fatura
             st.session_state.endereco_completo = endereco_completo
             st.session_state.cep_limpo = cep_limpo
@@ -181,7 +189,7 @@ elif st.session_state.page == 2:
             else:
                 st.error("Falha ao se conectar com o banco de dados. Tente novamente.")
         else:
-            st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
+            st.warning("Certifique-se de preencher um CEP válido e digitar o valor da fatura.")
 
 # ==========================================
 # TELA 3: RESULTADOS E WHATSAPP (ORDEM INVERTIDA)
@@ -193,7 +201,7 @@ elif st.session_state.page == 3:
     desconto = 0.12 
     economia_mensal = valor_fatura * desconto
     economia_anual = economia_mensal * 12
-    economia_contrato = economy_anual * 5
+    economia_contrato = economia_anual * 5  
     
     def formata_moeda(valor):
         return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
