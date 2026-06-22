@@ -15,7 +15,7 @@ st.set_page_config(page_title="Simulador de Economia de Energia", layout="center
 # ==========================================
 # FUNÇÃO PARA SALVAR NA PLANILHA GOOGLE
 # ==========================================
-def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato):
+def salvar_na_planilha(nome, email, telephone, cep, endereco, valor_fatura, mensal, anual, contrato):
     try:
         import json
         
@@ -23,33 +23,40 @@ def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensa
         credenciais_texto = st.secrets["google_credentials"]
         creds_dict = json.loads(credenciais_texto, strict=False)
         
-        # 2. Força a formatação correta da chave
+        # 2. Força a formatação correta da chave privada
         chave_privada = creds_dict["private_key"]
         creds_dict["private_key"] = chave_privada.replace("\\\\n", "\n").replace("\\n", "\n")
         
-        # 3. Conexão
+        # 3. Conexão nativa do Gspread
         client = gspread.service_account_from_dict(creds_dict)
         
-        # 4. Abre a planilha
+        # 4. Abre a planilha pelo nome exato (Garante que o e-mail do JSON é Editor nela)
         sheet = client.open("Leads_Palestra_Elumia").sheet1
         
-        # 5. Pega a data/hora e salva
+        # 5. Prepara os dados limpando os formatos para evitar conflitos de versão
         data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        nova_linha = [data_hora, nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato]
+        nova_linha = [
+            str(data_hora), 
+            str(nome), 
+            str(email), 
+            str(telephone), 
+            str(cep), 
+            str(endereco), 
+            float(valor_fatura), 
+            float(mensal), 
+            float(anual), 
+            float(contrato)
+        ]
         
-        # USER_ENTERED garante que a planilha entenda os números como R$ e não como texto
-        sheet.append_row(nova_linha, value_input_option="USER_ENTERED")
-        
+        # 6. Salva da forma mais pura e compatível possível
+        sheet.append_row(nova_linha)
         return True
         
     except Exception as e:
-        # Se o erro for o <Response [200]>, é um falso positivo de sucesso! Deixa passar.
-        if "200" in str(e):
-            return True
-            
-        # Se for um erro real, mostra na tela
-        st.error(f"Detalhe técnico do erro: {e}")
+        # Mostra o nome exato do tipo de erro para sabermos o que o Google respondeu
+        st.error(f"Erro Técnico Real: {type(e).__name__} - {e}")
         return False
+
 # ==========================================
 # CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
 # ==========================================
@@ -86,15 +93,15 @@ if st.session_state.page == 1:
     with st.form("form_contato"):
         nome = st.text_input("Nome Completo")
         email = st.text_input("E-mail")
-        telefone = st.text_input("Telefone de contato (WhatsApp)")
+        telephone = st.text_input("Telefone de contato (WhatsApp)")
         
         submit = st.form_submit_button("Próximo passo")
         
         if submit:
-            if nome and email and telefone:
+            if nome and email and telephone:
                 st.session_state.nome = nome
                 st.session_state.email = email
-                st.session_state.telefone = telefone
+                st.session_state.telephone = telephone
                 next_page()
                 st.rerun()
             else:
@@ -150,12 +157,11 @@ elif st.session_state.page == 2:
             economia_anual = economia_mensal * 12
             economia_contrato = economia_anual * 5
             
-            # Adiciona uma mensagem de carregamento para o cliente ver que está processando
             with st.spinner("Salvando informações e gerando cálculo..."):
                 sucesso = salvar_na_planilha(
                     st.session_state.nome,
                     st.session_state.email,
-                    st.session_state.telefone,
+                    st.session_state.telephone,
                     st.session_state.cep_limpo,
                     st.session_state.endereco_completo,
                     valor_fatura,
@@ -164,12 +170,11 @@ elif st.session_state.page == 2:
                     economia_contrato
                 )
             
-            # A TRAVA: Só muda de tela se a função retornar True (deu certo)
-            if sucesso == True:
+            if sucesso:
                 next_page()
                 st.rerun()
             else:
-                st.error("Não foi possível salvar os dados na planilha. Verifique o erro técnico acima.")
+                st.error("Não foi possível avançar porque o salvamento na planilha falhou. Veja o erro técnico detalhado acima.")
         else:
             st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
 
@@ -200,9 +205,7 @@ elif st.session_state.page == 3:
     
     st.markdown("<h3 style='text-align: center; color: #2E86C1; margin-bottom: 30px;'>Esta economia ajudaria no crescimento da sua empresa?</h3>", unsafe_allow_html=True)
     
-    # ==========================================
     # CONFIGURAÇÃO DOS 3 ESPECIALISTAS
-    # ==========================================
     nome_esp1 = "João Paulo"
     num_esp1 = "5511999999991"
     
