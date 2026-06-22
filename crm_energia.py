@@ -135,7 +135,7 @@ elif st.session_state.page == 2:
             
     valor_fatura = st.number_input("Valor médio da sua fatura de energia (R$)", min_value=0.0, format="%.2f")
     
-   if st.button("Calcular Minha Economia"):
+  if st.button("Calcular Minha Economia"):
         if endereco_completo and valor_fatura > 0:
             st.session_state.valor_fatura = valor_fatura
             st.session_state.endereco_completo = endereco_completo
