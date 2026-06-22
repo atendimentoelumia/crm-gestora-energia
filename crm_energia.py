@@ -49,8 +49,8 @@ def enviar_para_formspree(nome, email, telefone, cep, endereco, valor_fatura, me
 # ==========================================
 # CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
 # ==========================================
-LOGO_ELUMIA.png = "https://via.placeholder.com/150x40.png?text=E-lumia" 
-LOGO_PARCEIRO.png = "https://via.placeholder.com/150x60.png?text=Logo+Parceiro"
+LOGO_ELUMIA = "https://via.placeholder.com/150x40.png?text=E-lumia" 
+LOGO_PARCEIRO = "https://via.placeholder.com/150x60.png?text=Logo+Parceiro"
 
 col_logo1, espaco, col_logo2 = st.columns([1, 2, 1])
 with col_logo1:
