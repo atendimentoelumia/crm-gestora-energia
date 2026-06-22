@@ -135,33 +135,38 @@ elif st.session_state.page == 2:
             
     valor_fatura = st.number_input("Valor médio da sua fatura de energia (R$)", min_value=0.0, format="%.2f")
     
-    if st.button("Calcular Minha Economia"):
+   if st.button("Calcular Minha Economia"):
         if endereco_completo and valor_fatura > 0:
             st.session_state.valor_fatura = valor_fatura
             st.session_state.endereco_completo = endereco_completo
             st.session_state.cep_limpo = cep_limpo
             
-            # Realiza os cálculos para salvar na planilha antes de mudar de tela
             desconto = 0.12
             economia_mensal = valor_fatura * desconto
             economia_anual = economia_mensal * 12
             economia_contrato = economia_anual * 5
             
-            # DISPARA O SALVAMENTO AUTOMÁTICO
-            salvar_na_planilha(
-                st.session_state.nome,
-                st.session_state.email,
-                st.session_state.telefone,
-                st.session_state.cep_limpo,
-                st.session_state.endereco_completo,
-                valor_fatura,
-                economia_mensal,
-                economia_anual,
-                economia_contrato
-            )
+            # Adiciona uma mensagem de carregamento para o cliente ver que está processando
+            with st.spinner("Salvando informações e gerando cálculo..."):
+                sucesso = salvar_na_planilha(
+                    st.session_state.nome,
+                    st.session_state.email,
+                    st.session_state.telefone,
+                    st.session_state.cep_limpo,
+                    st.session_state.endereco_completo,
+                    valor_fatura,
+                    economia_mensal,
+                    economia_anual,
+                    economia_contrato
+                )
             
-            next_page()
-            st.rerun()
+            # A TRAVA: Só muda de tela se a função retornar True (deu certo)
+            if sucesso == True:
+                next_page()
+                st.rerun()
+            else:
+                # Se deu erro, ele não muda de tela e exibe a falha para você investigar
+                st.error("Não foi possível salvar os dados na planilha. Verifique o erro técnico acima.")
         else:
             st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
 
