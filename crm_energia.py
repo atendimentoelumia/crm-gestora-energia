@@ -10,20 +10,39 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Configuração da página
 st.set_page_config(page_title="Transformando Custo em Lucro", layout="centered")
 
+# CSS para forçar os logotipos a terem tamanhos iguais e alinhados
+st.markdown(
+    """
+    <style>
+    [data-testid="stImage"] img {
+        height: 60px !important;
+        object-fit: contain !important;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    div[data-testid="column"] {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # ==========================================
-# NOVA FUNÇÃO: SALVAR NO FORMSPREE
+# FUNÇÃO: SALVAR NO FORMSPREE
 # ==========================================
 def enviar_para_formspree(nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato):
-    # LINK DO FORMSPREE:
     LINK_FORMSPREE = "https://formspree.io/f/mnjkqwbq"
     
     try:
-        # Empacota os dados de forma limpa
         dados = {
             "Data e Hora": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             "Nome": nome,
             "E-mail": email,
-            "WhatsApp": telefone,
+            "WhatsApp": telephone,
             "CEP": cep,
             "Endereço": endereco,
             "Valor da Fatura (R$)": f"{valor_fatura:.2f}",
@@ -32,10 +51,7 @@ def enviar_para_formspree(nome, email, telefone, cep, endereco, valor_fatura, me
             "Economia Contrato (R$)": f"{contrato:.2f}"
         }
         
-        # Envia os dados para o Formspree
         resposta = requests.post(LINK_FORMSPREE, json=dados)
-        
-        # O código 200 significa que o Formspree recebeu com sucesso!
         if resposta.status_code == 200:
             return True
         else:
@@ -49,12 +65,10 @@ def enviar_para_formspree(nome, email, telefone, cep, endereco, valor_fatura, me
 # ==========================================
 # CONFIGURAÇÃO DOS LOGOTIPOS (TOPO DO APP)
 # ==========================================
-
-# ---> ALERTA: Troque os nomes abaixo pelo nome real das suas imagens! <---
 LOGO_ELUMIA = "LOGO_ELUMIA.png" 
 LOGO_PARCEIRO = "LOGO_PARCEIRO.png"
 
-col_logo1, espaco, col_logo2 = st.columns([1, 2, 1])
+col_logo1, espaco, col_logo2 = st.columns([1, 1, 1])
 with col_logo1:
     st.image(LOGO_ELUMIA, use_container_width=True)
 with col_logo2:
@@ -170,33 +184,23 @@ elif st.session_state.page == 2:
             st.warning("Certifique-se de preencher um CEP válido e o valor da fatura.")
 
 # ==========================================
-# TELA 3: RESULTADOS E WHATSAPP
+# TELA 3: RESULTADOS E WHATSAPP (ORDEM INVERTIDA)
 # ==========================================
 elif st.session_state.page == 3:
-    st.title("💰 Sua Economia Estimada")
+    st.title("📱 Fale Conosco no WhatsApp")
     
     valor_fatura = st.session_state.valor_fatura
     desconto = 0.12 
-    
     economia_mensal = valor_fatura * desconto
     economia_anual = economia_mensal * 12
-    economia_contrato = economia_anual * 5
+    economia_contrato = economy_anual * 5
     
     def formata_moeda(valor):
         return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     
-    st.info(f"Com base na sua fatura média de {formata_moeda(valor_fatura)}, projetamos a seguinte economia para a sua empresa:")
+    st.markdown("<p style='text-align: center; font-size: 19px; font-weight: bold;'>Sua simulação foi gerada! Escolha um especialista abaixo para ativá-la:</p>", unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Economia Mensal", formata_moeda(economia_mensal))
-    col2.metric("Economia Anual", formata_moeda(economia_anual))
-    col3.metric("Contrato (5 Anos)", formata_moeda(economia_contrato))
-    
-    st.markdown("---")
-    
-    st.markdown("<h3 style='text-align: center; color: #ebe715; margin-bottom: 38px;'>ESTA ECONOMIA AJUDARIA SUA EMPRESA HOJE?</h3>", unsafe_allow_html=True)
-    
-    # CONFIGURAÇÃO DOS 3 ESPECIALISTAS
+    # CONFIGURAÇÃO DOS 3 ESPECIALISTAS (AGORA NO TOPO)
     nome_esp1 = "THAIZ"
     num_esp1 = "5511937567788"
     
@@ -213,11 +217,20 @@ elif st.session_state.page == 3:
     link_wpp2 = f"https://wa.me/{num_esp2}?text={mensagem_codificada}"
     link_wpp3 = f"https://wa.me/{num_esp3}?text={mensagem_codificada}"
     
-    st.markdown("<p style='text-align: center; font-size: 18px; font-weight: bold;'>Escolha com quem quer falar agora:</p>", unsafe_allow_html=True)
-    
     st.link_button(f"📱 Falar com {nome_esp1}", link_wpp1, use_container_width=True)
     st.link_button(f"📱 Falar com {nome_esp2}", link_wpp2, use_container_width=True)
     st.link_button(f"📱 Falar com {nome_esp3}", link_wpp3, use_container_width=True)
+    
+    st.markdown("---")
+    
+    # QUADRO DE ECONOMIA (FOI PARA O MEIO/FINAL DA TELA)
+    st.markdown("<h3 style='text-align: center; color: #ebe715; margin-bottom: 25px;'>💰 Sua Economia Estimada</h3>", unsafe_allow_html=True)
+    st.info(f"Com base na sua fatura média de {formata_moeda(valor_fatura)}, projetamos o seguinte retorno para a sua empresa:")
+    
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Economia Mensal", formata_moeda(economia_mensal))
+    col2.metric("Economia Anual", formata_moeda(economia_anual))
+    col3.metric("Contrato (5 Anos)", formata_moeda(economia_contrato))
     
     st.markdown("---")
     
