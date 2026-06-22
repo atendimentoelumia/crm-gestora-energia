@@ -17,15 +17,18 @@ st.set_page_config(page_title="Simulador de Economia de Energia", layout="center
 # ==========================================
 def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensal, anual, contrato):
     try:
+        import json
+        
         # Define o escopo de acesso
         scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/drive']
         
-        # Carrega as credenciais do arquivo JSON que deve estar na mesma pasta do app
-        creds = ServiceAccountCredentials.from_json_keyfile_name('credenciais.json', scope)
+        # Lê as credenciais diretamente do cofre seguro do Streamlit (Secrets)
+        creds_dict = json.loads(st.secrets["google_credentials"])
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
         client = gspread.authorize(creds)
         
         # ABRA A PLANILHA PELO NOME EXATO DELA
-        # Certifique-se de compartilhar a planilha com o e-mail do "client_email" do JSON
+        # Certifique-se de que o e-mail da conta de serviço é "Editor" na planilha
         sheet = client.open("Leads_Palestra_Elumia").sheet1
         
         # Pega a data e hora atual do preenchimento
@@ -37,8 +40,9 @@ def salvar_na_planilha(nome, email, telefone, cep, endereco, valor_fatura, mensa
         # Adiciona a linha na planilha
         sheet.append_row(nova_linha)
         return True
+        
     except Exception as e:
-        # Se der erro (ex: arquivo json faltando ou falta de compartilhamento), avisa nos bastidores
+        # Se der erro, avisa nos bastidores (Não trava a tela do cliente)
         st.write(f"Erro ao salvar na planilha: {e}")
         return False
 
